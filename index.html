@@ -640,10 +640,10 @@
                             </div>
                         </div>
 
-                        <!-- Bucket Tagging & Lifecycle -->
+                        <!-- Bucket Tagging -->
                         <div class="action-category collapsed">
                             <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>⚙️ Bucket Tagging & Lifecycle</h4>
+                                <h4>🏷️ Bucket Tagging</h4>
                                 <span class="category-toggle">▼</span>
                             </div>
                             <div class="category-content">
@@ -658,14 +658,6 @@
                                 <div class="checkbox-group">
                                     <input type="checkbox" id="action_s3_DeleteBucketTagging" value="s3:DeleteBucketTagging" class="s3-action">
                                     <label for="action_s3_DeleteBucketTagging">DeleteBucketTagging</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetLifecycleConfiguration" value="s3:GetLifecycleConfiguration" class="s3-action">
-                                    <label for="action_s3_GetLifecycleConfiguration">GetLifecycleConfiguration</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutLifecycleConfiguration" value="s3:PutLifecycleConfiguration" class="s3-action">
-                                    <label for="action_s3_PutLifecycleConfiguration">PutLifecycleConfiguration</label>
                                 </div>
                             </div>
                         </div>
@@ -1860,7 +1852,6 @@ Click "Generate Policy" to create your bucket policy...</div>
                 's3:GetBucketPolicy', 's3:PutBucketPolicy', 's3:DeleteBucketPolicy',
                 's3:GetBucketRequestPayment', 's3:PutBucketRequestPayment',
                 's3:GetBucketTagging', 's3:PutBucketTagging', 's3:DeleteBucketTagging',
-                's3:GetLifecycleConfiguration', 's3:PutLifecycleConfiguration',
                 's3:GetReplicationConfiguration', 's3:PutReplicationConfiguration',
                 's3:GetAccelerateConfiguration', 's3:PutAccelerateConfiguration',
                 's3:GetEncryptionConfiguration', 's3:PutEncryptionConfiguration',

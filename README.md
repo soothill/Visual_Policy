@@ -15,7 +15,7 @@ A simple, user-friendly web-based utility for creating S3 bucket policies for Im
 - **Flexible Configuration**:
   - **Real-time bucket name validation** - Ensures compliance with AWS S3 naming standards
   - **Progressive ARN suggestions** - Step-by-step guidance while typing ARNs, not just error messages
-  - **Impossible Cloud compatible S3 actions** - 35+ S3 actions organized in 8 collapsible categories, all compatible with Impossible Cloud
+  - **Impossible Cloud compatible S3 actions** - 33+ S3 actions organized in 8 collapsible categories, all compatible with Impossible Cloud
   - Specify bucket name and resource paths
   - Choose Allow/Deny effects
   - Configure principals (IAM users, accounts, or public access)
@@ -242,7 +242,7 @@ service.example.com                          ✗ (must end with .amazonaws.com)
 
 ### S3 Actions Selection (Impossible Cloud Compatible)
 
-The application provides **35+ S3 actions** organized into 8 categories for easy selection. All actions are compatible with Impossible Cloud's S3 API. Click any category header to expand/collapse it.
+The application provides **33+ S3 actions** organized into 8 categories for easy selection. All actions are compatible with Impossible Cloud's S3 API. Click any category header to expand/collapse it.
 
 **Action Categories:**
 
@@ -261,8 +261,8 @@ The application provides **35+ S3 actions** organized into 8 categories for easy
 5. **📤 Multipart Upload** (2 actions)
    - AbortMultipartUpload, ListMultipartUploadParts
 
-6. **🏷️ Bucket Tagging & Lifecycle** (5 actions)
-   - GetBucketTagging, PutBucketTagging, DeleteBucketTagging, GetLifecycleConfiguration, PutLifecycleConfiguration
+6. **🏷️ Bucket Tagging** (3 actions)
+   - GetBucketTagging, PutBucketTagging, DeleteBucketTagging
 
 7. **🔒 Object Lock & Compliance** (3 actions)
    - GetObjectLockConfiguration, PutObjectLockConfiguration, BypassGovernanceRetention
