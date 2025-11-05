@@ -189,6 +189,26 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             flex-grow: 1;
+            outline: none;
+            border: 2px solid transparent;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            cursor: text;
+        }
+
+        .policy-output:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .policy-output:hover {
+            border-color: #444;
+        }
+
+        .editable-hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
         }
 
         .action-buttons {
@@ -381,12 +401,13 @@
 
             <div class="preview-section">
                 <h2>Generated Policy</h2>
-                <div class="policy-output" id="policyOutput">{
+                <div class="policy-output" id="policyOutput" contenteditable="true" spellcheck="false">{
   "Version": "2012-10-17",
   "Statement": []
 }
 
 Click "Generate Policy" to create your bucket policy...</div>
+                <div class="editable-hint">💡 Tip: You can click and edit the policy directly above</div>
                 <div class="action-buttons">
                     <button class="action-btn copy-btn" onclick="copyPolicy()">📋 Copy to Clipboard</button>
                     <button class="action-btn download-btn" onclick="downloadPolicy()">💾 Download JSON</button>
