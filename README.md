@@ -1,6 +1,6 @@
-# AWS S3 Bucket Policy Generator
+# AWS S3 Bucket Policy Generator (Impossible Cloud Compatible)
 
-A simple, user-friendly web-based utility for creating AWS S3 bucket policies. Perfect for new AWS customers who need to quickly generate secure and compliant bucket policies.
+A simple, user-friendly web-based utility for creating S3 bucket policies. Perfect for new AWS and Impossible Cloud customers who need to quickly generate secure and compliant bucket policies. All S3 actions are compatible with Impossible Cloud's S3 API.
 
 ## Features
 
@@ -15,7 +15,7 @@ A simple, user-friendly web-based utility for creating AWS S3 bucket policies. P
 - **Flexible Configuration**:
   - **Real-time bucket name validation** - Ensures compliance with AWS S3 naming standards
   - **Progressive ARN suggestions** - Step-by-step guidance while typing ARNs, not just error messages
-  - **Comprehensive S3 actions** - 60+ S3 actions organized in 9 collapsible categories
+  - **Impossible Cloud compatible S3 actions** - 35+ S3 actions organized in 8 collapsible categories, all compatible with Impossible Cloud
   - Specify bucket name and resource paths
   - Choose Allow/Deny effects
   - Configure principals (IAM users, accounts, or public access)
@@ -215,42 +215,40 @@ service.example.com                     ✗ (must end with .amazonaws.com)
 - Unusual services for S3 bucket policies trigger warnings
 - Just using an account ID suggests using full ARN format
 
-### S3 Actions Selection
+### S3 Actions Selection (Impossible Cloud Compatible)
 
-The application provides **60+ S3 actions** organized into 9 categories for easy selection. Click any category header to expand/collapse it.
+The application provides **35+ S3 actions** organized into 8 categories for easy selection. All actions are compatible with Impossible Cloud's S3 API. Click any category header to expand/collapse it.
 
 **Action Categories:**
 
-1. **📄 Object Operations** (6 actions)
-   - GetObject, PutObject, DeleteObject, GetObjectAttributes, GetObjectTorrent, RestoreObject
+1. **📄 Object Operations** (7 actions)
+   - GetObject, PutObject, DeleteObject, GetObjectAttributes, GetObjectTagging, PutObjectTagging, DeleteObjectTagging
 
 2. **🗂️ Bucket Operations** (6 actions)
    - ListBucket, ListBucketVersions, ListBucketMultipartUploads, GetBucketLocation, GetBucketVersioning, PutBucketVersioning
 
-3. **🔐 Access Control (ACL)** (9 actions)
-   - GetObjectAcl, PutObjectAcl, GetBucketAcl, PutBucketAcl, GetBucketPolicy, PutBucketPolicy, DeleteBucketPolicy, GetBucketPublicAccessBlock, PutBucketPublicAccessBlock
+3. **🔐 Bucket Policy & CORS** (6 actions)
+   - GetBucketPolicy, PutBucketPolicy, DeleteBucketPolicy, GetBucketCORS, PutBucketCORS, DeleteBucketCORS
 
-4. **🔄 Versioning** (5 actions)
-   - GetObjectVersion, DeleteObjectVersion, GetObjectVersionAcl, PutObjectVersionAcl, GetObjectVersionTorrent
+4. **🔄 Object Versioning** (6 actions)
+   - GetObjectVersion, DeleteObjectVersion, GetObjectVersionAttributes, GetObjectVersionTagging, PutObjectVersionTagging, DeleteObjectVersionTagging
 
 5. **📤 Multipart Upload** (2 actions)
    - AbortMultipartUpload, ListMultipartUploadParts
 
-6. **⚙️ Bucket Configuration** (15 actions)
-   - CORS, Website, Logging, Notification, Tagging, RequestPayment settings
+6. **🏷️ Bucket Tagging & Lifecycle** (5 actions)
+   - GetBucketTagging, PutBucketTagging, DeleteBucketTagging, GetLifecycleConfiguration, PutLifecycleConfiguration
 
-7. **♻️ Lifecycle & Replication** (4 actions)
-   - GetLifecycleConfiguration, PutLifecycleConfiguration, GetReplicationConfiguration, PutReplicationConfiguration
+7. **🔒 Object Lock & Compliance** (3 actions)
+   - GetObjectLockConfiguration, PutObjectLockConfiguration, BypassGovernanceRetention
 
-8. **🔒 Encryption & Security** (9 actions)
-   - Encryption configuration, Object Lock, Legal Hold, Retention policies
-
-9. **🚀 Advanced** (3 actions)
-   - Transfer Acceleration, s3:* (all actions)
+8. **🚀 Advanced** (1 action)
+   - s3:* (all S3 actions)
 
 **Usage Tips:**
 - Object Operations category is expanded by default for quick access to common actions
 - Other categories start collapsed to keep the interface clean
+- All actions are compatible with Impossible Cloud's S3 API
 - Select `s3:*` in the Advanced category to grant all S3 permissions
 - Use the "Additional Actions" textarea for any actions not in the list
 
