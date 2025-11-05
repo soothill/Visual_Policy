@@ -183,15 +183,17 @@ As you type, the system guides you through each part of the ARN:
 4. **After `arn:aws:iam::`**: "💡 Next: 12-digit account ID → `123456789012` then `:`"
 5. **While typing account**: "💡 Account ID: 5/12 digits (7 more needed)"
 6. **After account ID**: "💡 Perfect! Now add `:` and resource (e.g., `user/username` or `root`)"
-7. **After `:`**: "💡 Next: resource → `user/username`, `role/rolename`, or `root`"
-8. **Complete**: "✓ Valid IAM user ARN"
+7. **After `:`**: "💡 Next: resource → Examples: `user/alice`, `role/S3AccessRole`, `group/Developers`, or `root`"
+8. **Typing resource type**: "💡 Add the user name. Examples: `user/alice`, `user/developers/john`"
+9. **Complete**: "✓ Valid IAM user ARN"
 
 **For Impossible Cloud ARNs:**
 1. **After `arn:ipcld:`**: "💡 Next: service → `iam` (Impossible Cloud only supports IAM currently)"
 2. **After `arn:ipcld:iam::`**: "💡 Next: Your Impossible Cloud canonical ID then `:`"
 3. **While typing canonical ID**: "💡 Continue entering canonical ID, then add `:` for resource"
-4. **After canonical ID**: "💡 Next: resource → `user/username` or `policy/policyname`"
-5. **Complete**: "✓ Valid Impossible Cloud user ARN"
+4. **After canonical ID**: "💡 Next: resource → Examples: `user/alice`, `user/bob`, `policy/MyBucketPolicy`"
+5. **Typing resource type**: "💡 Add the user name. Examples: `user/alice` or `user/bob`"
+6. **Complete**: "✓ Valid Impossible Cloud user ARN"
 
 **Visual Feedback:**
 - 🔵 Blue hint box = Helpful suggestion for next step
