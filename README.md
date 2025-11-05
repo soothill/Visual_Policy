@@ -13,6 +13,7 @@ A simple, user-friendly web-based utility for creating AWS S3 bucket policies. P
 - **Visual Interface**: Easy-to-use GUI with no command-line experience required
 
 - **Flexible Configuration**:
+  - **Real-time bucket name validation** - Ensures compliance with AWS S3 naming standards
   - Specify bucket name and resource paths
   - Choose Allow/Deny effects
   - Configure principals (IAM users, accounts, or public access)
@@ -111,6 +112,31 @@ After generating a policy, you can click directly in the policy output area to m
 2. Update bucket name
 3. Replace `YOUR-OAI-ID` with your CloudFront Origin Access Identity ID
 4. Click "Generate Policy"
+
+### Bucket Name Validation
+
+The application validates bucket names in real-time as you type, ensuring they comply with AWS S3 naming standards. The validation checks:
+
+**AWS S3 Bucket Naming Rules:**
+- ✓ Length between 3 and 63 characters
+- ✓ Only lowercase letters, numbers, dots (.), and hyphens (-)
+- ✓ Must begin and end with a letter or number
+- ✓ Cannot be formatted as an IP address (e.g., 192.168.1.1)
+- ✓ Cannot start with `xn--` prefix
+- ✓ Cannot end with `-s3alias` suffix
+- ✓ Cannot contain two adjacent periods (..)
+- ✓ Cannot have a period adjacent to a hyphen (.- or -.)
+- ✓ Cannot contain uppercase letters
+- ✓ Cannot contain underscores (_)
+
+**Visual Feedback:**
+- 🟢 Green border = Valid bucket name
+- 🔴 Red border = Invalid bucket name
+- Specific error messages shown below the input field
+
+**Examples:**
+- ✅ Valid: `my-bucket-name`, `example.bucket.123`, `prod-data-2024`
+- ❌ Invalid: `MyBucket` (uppercase), `my_bucket` (underscore), `my..bucket` (adjacent periods)
 
 ### Advanced Features
 
