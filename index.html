@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS S3 Bucket Policy Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #232f3e 0%, #ff9900 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .form-section, .preview-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-section h2, .preview-section h2 {
+            color: #232f3e;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #ff9900;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #232f3e;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .template-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .template-section h3 {
+            color: #232f3e;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .template-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .template-btn {
+            padding: 12px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .template-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .policy-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            min-height: 400px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            flex-grow: 1;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .download-btn {
+            background: #007bff;
+            color: white;
+        }
+
+        .download-btn:hover {
+            background: #0056b3;
+        }
+
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #545b62;
+        }
+
+        .validate-btn {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .validate-btn:hover {
+            background: #e0a800;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #28a745;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: #1976D2;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            color: #555;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 968px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .template-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🪣 AWS S3 Bucket Policy Generator</h1>
+            <p>Create secure and compliant S3 bucket policies with ease</p>
+        </div>
+
+        <div class="content">
+            <div class="form-section">
+                <h2>Policy Configuration</h2>
+
+                <div class="info-box">
+                    <h4>Getting Started</h4>
+                    <p>Choose a template below or manually configure your policy. Fill in the required fields and click "Generate Policy" to create your S3 bucket policy.</p>
+                </div>
+
+                <div class="template-section">
+                    <h3>Quick Templates</h3>
+                    <div class="template-buttons">
+                        <button class="template-btn" onclick="loadTemplate('publicRead')">Public Read Access</button>
+                        <button class="template-btn" onclick="loadTemplate('privateReadWrite')">Private Read/Write</button>
+                        <button class="template-btn" onclick="loadTemplate('cloudfront')">CloudFront Access</button>
+                        <button class="template-btn" onclick="loadTemplate('crossAccount')">Cross-Account Access</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bucketName">S3 Bucket Name *</label>
+                    <input type="text" id="bucketName" placeholder="my-example-bucket" required>
+                    <small>Enter the name of your S3 bucket</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="policyEffect">Effect *</label>
+                    <select id="policyEffect">
+                        <option value="Allow">Allow</option>
+                        <option value="Deny">Deny</option>
+                    </select>
+                    <small>Allow or Deny the specified actions</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="principal">Principal</label>
+                    <input type="text" id="principal" placeholder='* or arn:aws:iam::123456789012:user/username'>
+                    <small>AWS account, IAM user, or * for public access</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Common Actions</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="actionGetObject" value="s3:GetObject">
+                        <label for="actionGetObject">Get Object (Read)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="actionPutObject" value="s3:PutObject">
+                        <label for="actionPutObject">Put Object (Write)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="actionDeleteObject" value="s3:DeleteObject">
+                        <label for="actionDeleteObject">Delete Object</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="actionListBucket" value="s3:ListBucket">
+                        <label for="actionListBucket">List Bucket</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="customActions">Additional Actions (Optional)</label>
+                    <textarea id="customActions" placeholder="s3:GetBucketLocation&#10;s3:PutObjectAcl"></textarea>
+                    <small>One action per line</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="resourcePath">Resource Path</label>
+                    <input type="text" id="resourcePath" placeholder="* or folder/* or specific-file.txt">
+                    <small>Specify path within bucket (use * for all objects)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="condition">Condition (Optional - JSON)</label>
+                    <textarea id="condition" placeholder='{"StringLike": {"s3:prefix": ["documents/*"]}}'></textarea>
+                    <small>Advanced: Add IAM policy conditions in JSON format</small>
+                </div>
+
+                <button class="generate-btn" onclick="generatePolicy()">🚀 Generate Policy</button>
+            </div>
+
+            <div class="preview-section">
+                <h2>Generated Policy</h2>
+                <div class="policy-output" id="policyOutput">{
+  "Version": "2012-10-17",
+  "Statement": []
+}
+
+Click "Generate Policy" to create your bucket policy...</div>
+                <div class="action-buttons">
+                    <button class="action-btn copy-btn" onclick="copyPolicy()">📋 Copy to Clipboard</button>
+                    <button class="action-btn download-btn" onclick="downloadPolicy()">💾 Download JSON</button>
+                    <button class="action-btn clear-btn" onclick="clearForm()">🗑️ Clear Form</button>
+                    <button class="action-btn validate-btn" onclick="validatePolicy()">✓ Validate JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        let currentPolicy = null;
+
+        function loadTemplate(templateName) {
+            const templates = {
+                publicRead: {
+                    bucketName: 'my-public-bucket',
+                    effect: 'Allow',
+                    principal: '*',
+                    actions: ['s3:GetObject'],
+                    resourcePath: '*',
+                    description: 'Public read access for all objects'
+                },
+                privateReadWrite: {
+                    bucketName: 'my-private-bucket',
+                    effect: 'Allow',
+                    principal: 'arn:aws:iam::123456789012:user/YourUsername',
+                    actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:ListBucket'],
+                    resourcePath: '*',
+                    description: 'Private read/write access for specific IAM user'
+                },
+                cloudfront: {
+                    bucketName: 'my-cloudfront-bucket',
+                    effect: 'Allow',
+                    principal: 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity YOUR-OAI-ID',
+                    actions: ['s3:GetObject'],
+                    resourcePath: '*',
+                    description: 'CloudFront Origin Access Identity access'
+                },
+                crossAccount: {
+                    bucketName: 'my-shared-bucket',
+                    effect: 'Allow',
+                    principal: 'arn:aws:iam::ACCOUNT-ID-WITHOUT-HYPHENS:root',
+                    actions: ['s3:GetObject', 's3:ListBucket'],
+                    resourcePath: '*',
+                    description: 'Cross-account access'
+                }
+            };
+
+            const template = templates[templateName];
+            if (!template) return;
+
+            document.getElementById('bucketName').value = template.bucketName;
+            document.getElementById('policyEffect').value = template.effect;
+            document.getElementById('principal').value = template.principal;
+            document.getElementById('resourcePath').value = template.resourcePath;
+
+            // Clear all checkboxes first
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+            // Check the template actions
+            template.actions.forEach(action => {
+                const checkbox = document.querySelector(`input[value="${action}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+
+            showNotification(`Template loaded: ${templateName}`);
+        }
+
+        function generatePolicy() {
+            const bucketName = document.getElementById('bucketName').value.trim();
+            if (!bucketName) {
+                showNotification('Please enter a bucket name', 'error');
+                return;
+            }
+
+            const effect = document.getElementById('policyEffect').value;
+            const principal = document.getElementById('principal').value.trim() || '*';
+            const resourcePath = document.getElementById('resourcePath').value.trim() || '*';
+            const customActions = document.getElementById('customActions').value.trim();
+            const conditionText = document.getElementById('condition').value.trim();
+
+            // Collect checked actions
+            const actions = [];
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                actions.push(cb.value);
+            });
+
+            // Add custom actions
+            if (customActions) {
+                customActions.split('\n').forEach(action => {
+                    const trimmedAction = action.trim();
+                    if (trimmedAction) actions.push(trimmedAction);
+                });
+            }
+
+            if (actions.length === 0) {
+                showNotification('Please select at least one action', 'error');
+                return;
+            }
+
+            // Build resources array
+            const resources = [];
+            const needsBucketResource = actions.some(a => a === 's3:ListBucket' || a.startsWith('s3:GetBucket') || a.startsWith('s3:PutBucket'));
+            const needsObjectResource = actions.some(a => a.includes('Object'));
+
+            if (needsBucketResource) {
+                resources.push(`arn:aws:s3:::${bucketName}`);
+            }
+            if (needsObjectResource) {
+                resources.push(`arn:aws:s3:::${bucketName}/${resourcePath}`);
+            }
+            if (resources.length === 0) {
+                resources.push(`arn:aws:s3:::${bucketName}/*`);
+            }
+
+            // Build statement
+            const statement = {
+                Sid: "GeneratedPolicy" + Date.now(),
+                Effect: effect,
+                Principal: principal === '*' ? '*' : { AWS: principal },
+                Action: actions.length === 1 ? actions[0] : actions,
+                Resource: resources.length === 1 ? resources[0] : resources
+            };
+
+            // Add condition if provided
+            if (conditionText) {
+                try {
+                    statement.Condition = JSON.parse(conditionText);
+                } catch (e) {
+                    showNotification('Invalid JSON in Condition field', 'error');
+                    return;
+                }
+            }
+
+            // Build full policy
+            const policy = {
+                Version: "2012-10-17",
+                Statement: [statement]
+            };
+
+            currentPolicy = policy;
+            document.getElementById('policyOutput').textContent = JSON.stringify(policy, null, 2);
+            showNotification('Policy generated successfully!');
+        }
+
+        function copyPolicy() {
+            const policyText = document.getElementById('policyOutput').textContent;
+            navigator.clipboard.writeText(policyText).then(() => {
+                showNotification('Policy copied to clipboard!');
+            }).catch(() => {
+                showNotification('Failed to copy policy', 'error');
+            });
+        }
+
+        function downloadPolicy() {
+            const policyText = document.getElementById('policyOutput').textContent;
+            const bucketName = document.getElementById('bucketName').value.trim() || 'bucket';
+            const blob = new Blob([policyText], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${bucketName}-policy.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('Policy downloaded!');
+        }
+
+        function clearForm() {
+            if (confirm('Are you sure you want to clear the form?')) {
+                document.getElementById('bucketName').value = '';
+                document.getElementById('policyEffect').value = 'Allow';
+                document.getElementById('principal').value = '';
+                document.getElementById('resourcePath').value = '';
+                document.getElementById('customActions').value = '';
+                document.getElementById('condition').value = '';
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                document.getElementById('policyOutput').textContent = '{\n  "Version": "2012-10-17",\n  "Statement": []\n}\n\nClick "Generate Policy" to create your bucket policy...';
+                currentPolicy = null;
+                showNotification('Form cleared');
+            }
+        }
+
+        function validatePolicy() {
+            const policyText = document.getElementById('policyOutput').textContent;
+            try {
+                const policy = JSON.parse(policyText);
+
+                // Basic validation
+                const errors = [];
+                if (!policy.Version) errors.push('Missing Version field');
+                if (!policy.Statement || !Array.isArray(policy.Statement)) errors.push('Missing or invalid Statement array');
+                if (policy.Statement && policy.Statement.length === 0) errors.push('Statement array is empty');
+
+                policy.Statement && policy.Statement.forEach((stmt, idx) => {
+                    if (!stmt.Effect) errors.push(`Statement ${idx}: Missing Effect`);
+                    if (!stmt.Action) errors.push(`Statement ${idx}: Missing Action`);
+                    if (!stmt.Resource) errors.push(`Statement ${idx}: Missing Resource`);
+                });
+
+                if (errors.length > 0) {
+                    showNotification('Validation errors: ' + errors.join(', '), 'error');
+                } else {
+                    showNotification('✓ Policy is valid JSON and has required fields!');
+                }
+            } catch (e) {
+                showNotification('Invalid JSON: ' + e.message, 'error');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.background = type === 'error' ? '#dc3545' : '#28a745';
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize with default empty policy
+        window.onload = function() {
+            console.log('AWS S3 Bucket Policy Generator loaded successfully');
+        };
+    </script>
+</body>
+</html>
