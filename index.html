@@ -1013,7 +1013,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                 }
 
                 // Stage 2: Typed "arn:"
-                if (parts.length === 1 && principal.endsWith(':')) {
+                if (parts.length === 2 && principal.endsWith(':')) {
                     return {
                         type: 'hint',
                         message: '💡 Next: partition → <code>arn:aws:</code> for AWS, <code>arn:ipcld:</code> for Impossible Cloud'
@@ -1047,7 +1047,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                 }
 
                 // Stage 4: Typed partition, now need service
-                if (parts.length === 2 && principal.endsWith(':')) {
+                if (parts.length === 3 && principal.endsWith(':')) {
                     const partition = parts[1];
                     if (partition === 'ipcld') {
                         return {
@@ -1103,7 +1103,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                 }
 
                 // Stage 6: Typed service, now need region (usually empty)
-                if (parts.length === 3 && principal.endsWith(':')) {
+                if (parts.length === 4 && principal.endsWith(':')) {
                     const partition = parts[1];
                     if (partition === 'ipcld') {
                         return {
@@ -1135,7 +1135,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                 }
 
                 // Stage 8: Need account ID or canonical ID
-                if (parts.length === 4 && principal.endsWith(':')) {
+                if (parts.length === 5 && principal.endsWith(':')) {
                     const partition = parts[1];
                     if (partition === 'ipcld') {
                         return {
@@ -1200,7 +1200,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                 }
 
                 // Stage 10: Need resource
-                if (parts.length === 5 && principal.endsWith(':')) {
+                if (parts.length === 6 && principal.endsWith(':')) {
                     const partition = parts[1];
                     const service = parts[2];
 
