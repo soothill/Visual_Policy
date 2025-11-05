@@ -449,7 +449,6 @@
                     <div class="template-buttons">
                         <button class="template-btn" onclick="loadTemplate('publicRead')">Public Read Access</button>
                         <button class="template-btn" onclick="loadTemplate('privateReadWrite')">Private Read/Write</button>
-                        <button class="template-btn" onclick="loadTemplate('cloudfront')">CloudFront Access</button>
                         <button class="template-btn" onclick="loadTemplate('crossAccount')">Cross-Account Access</button>
                     </div>
                 </div>
@@ -640,10 +639,10 @@
                             </div>
                         </div>
 
-                        <!-- Bucket Tagging & Lifecycle -->
+                        <!-- Bucket Tagging -->
                         <div class="action-category collapsed">
                             <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>⚙️ Bucket Tagging & Lifecycle</h4>
+                                <h4>🏷️ Bucket Tagging</h4>
                                 <span class="category-toggle">▼</span>
                             </div>
                             <div class="category-content">
@@ -658,14 +657,6 @@
                                 <div class="checkbox-group">
                                     <input type="checkbox" id="action_s3_DeleteBucketTagging" value="s3:DeleteBucketTagging" class="s3-action">
                                     <label for="action_s3_DeleteBucketTagging">DeleteBucketTagging</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetLifecycleConfiguration" value="s3:GetLifecycleConfiguration" class="s3-action">
-                                    <label for="action_s3_GetLifecycleConfiguration">GetLifecycleConfiguration</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutLifecycleConfiguration" value="s3:PutLifecycleConfiguration" class="s3-action">
-                                    <label for="action_s3_PutLifecycleConfiguration">PutLifecycleConfiguration</label>
                                 </div>
                             </div>
                         </div>
@@ -876,7 +867,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                 return { isValid: true, errors: [], warnings: ['Using canonical user ID - ensure this is an Impossible Cloud canonical ID'] };
             }
 
-            // Check for service principals (e.g., s3.amazonaws.com, cloudfront.amazonaws.com)
+            // Check for service principals (e.g., s3.amazonaws.com)
             if (principal.includes('.amazonaws.com') || principal.includes('.amazon.com')) {
                 if (!principal.match(/^[a-z0-9-]+\.(amazonaws\.com|amazon\.com)$/)) {
                     errors.push('Service principal format should be: service-name.amazonaws.com');
@@ -1314,11 +1305,10 @@ Click "Generate Policy" to create your bucket policy...</div>
                         message: '✓ Valid service principal'
                     };
                 } else if ('s3.amazonaws.com'.startsWith(principal) ||
-                           'cloudfront.amazonaws.com'.startsWith(principal) ||
                            'ec2.amazonaws.com'.startsWith(principal)) {
                     return {
                         type: 'hint',
-                        message: '💡 Common: <code>s3.amazonaws.com</code>, <code>cloudfront.amazonaws.com</code>, <code>ec2.amazonaws.com</code>'
+                        message: '💡 Common: <code>s3.amazonaws.com</code>, <code>ec2.amazonaws.com</code>'
                     };
                 } else if (principal.includes('amazonaws')) {
                     return {
@@ -1448,14 +1438,6 @@ Click "Generate Policy" to create your bucket policy...</div>
                     actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:ListBucket'],
                     resourcePath: '*',
                     description: 'Private read/write access for specific IAM user'
-                },
-                cloudfront: {
-                    bucketName: 'my-cloudfront-bucket',
-                    effect: 'Allow',
-                    principal: 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity YOUR-OAI-ID',
-                    actions: ['s3:GetObject'],
-                    resourcePath: '*',
-                    description: 'CloudFront Origin Access Identity access'
                 },
                 crossAccount: {
                     bucketName: 'my-shared-bucket',
@@ -1831,7 +1813,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                 services.forEach((svc, idx) => {
                     if (typeof svc !== 'string') {
                         errors.push(`${prefix}.Service[${idx}]: Must be a string`);
-                    } else if (!svc.includes('.amazonaws.com') && svc !== 's3.amazonaws.com' && svc !== 'cloudfront.amazonaws.com') {
+                    } else if (!svc.includes('.amazonaws.com') && svc !== 's3.amazonaws.com') {
                         warnings.push(`${prefix}.Service[${idx}]: Service principal should typically end with .amazonaws.com`);
                     }
                 });
@@ -1860,7 +1842,6 @@ Click "Generate Policy" to create your bucket policy...</div>
                 's3:GetBucketPolicy', 's3:PutBucketPolicy', 's3:DeleteBucketPolicy',
                 's3:GetBucketRequestPayment', 's3:PutBucketRequestPayment',
                 's3:GetBucketTagging', 's3:PutBucketTagging', 's3:DeleteBucketTagging',
-                's3:GetLifecycleConfiguration', 's3:PutLifecycleConfiguration',
                 's3:GetReplicationConfiguration', 's3:PutReplicationConfiguration',
                 's3:GetAccelerateConfiguration', 's3:PutAccelerateConfiguration',
                 's3:GetEncryptionConfiguration', 's3:PutEncryptionConfiguration',
