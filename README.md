@@ -7,7 +7,6 @@ A simple, user-friendly web-based utility for creating S3 bucket policies for Im
 - **Quick Templates**: Pre-configured templates for common use cases:
   - Public Read Access
   - Private Read/Write Access
-  - CloudFront Origin Access
   - Cross-Account Access
 
 - **Visual Interface**: Easy-to-use GUI with no command-line experience required
@@ -107,13 +106,6 @@ After generating a policy, you can click directly in the policy output area to m
 3. Update principal with your IAM user ARN: `arn:aws:iam::123456789012:user/YourUsername`
 4. Click "Generate Policy"
 
-#### CloudFront Distribution Access
-
-1. Click "CloudFront Access" template
-2. Update bucket name
-3. Replace `YOUR-OAI-ID` with your CloudFront Origin Access Identity ID
-4. Click "Generate Policy"
-
 ### Bucket Name Validation
 
 The application validates bucket names in real-time as you type, ensuring they comply with AWS S3 naming standards. The validation checks:
@@ -164,7 +156,6 @@ The application provides **progressive, helpful suggestions** as you type ARNs, 
 
 5. **Service Principals**
    - Format: `s3.amazonaws.com`
-   - Format: `cloudfront.amazonaws.com`
    - ⚠ Note: AWS service principals may not be supported by Impossible Cloud
 
 6. **Account IDs**
@@ -428,7 +419,6 @@ Since this is a static site (single HTML file), you can deploy it to:
 
 - **Netlify**: Drag and drop the `index.html` file
 - **Vercel**: Import from GitHub repository
-- **AWS S3 + CloudFront**: Upload as a static website
 - **Any web server**: Just upload `index.html`
 
 ## Browser Compatibility
