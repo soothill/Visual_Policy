@@ -871,25 +871,59 @@ Click "Generate Policy" to create your bucket policy...</div>
                 return { isValid: true, errors: [], warnings: [] };
             }
 
+            // Check for canonical user ID (64-character hex string)
+            if (/^[a-f0-9]{64}$/.test(principal)) {
+                return { isValid: true, errors: [], warnings: ['Using canonical user ID - ensure this is an Impossible Cloud canonical ID'] };
+            }
+
             // Check for service principals (e.g., s3.amazonaws.com, cloudfront.amazonaws.com)
             if (principal.includes('.amazonaws.com') || principal.includes('.amazon.com')) {
                 if (!principal.match(/^[a-z0-9-]+\.(amazonaws\.com|amazon\.com)$/)) {
                     errors.push('Service principal format should be: service-name.amazonaws.com');
                 } else {
-                    return { isValid: true, errors: [], warnings: [] };
+                    warnings.push('⚠ AWS service principals (*.amazonaws.com) may not be supported by Impossible Cloud. Use IAM user/role ARNs instead.');
+                    return { isValid: true, errors: [], warnings: warnings };
                 }
             }
 
             // Validate IAM ARN format
             if (principal.startsWith('arn:')) {
-                // General ARN format: arn:partition:service:region:account-id:resource
+                const parts = principal.split(':');
+                const partition = parts[1];
+
+                // Impossible Cloud ARN format: arn:ipcld:iam::CanonicalID:policy/name or user/name
+                if (partition === 'ipcld') {
+                    const service = parts[2];
+                    const canonicalId = parts[4];
+                    const resource = parts.slice(5).join(':');
+
+                    if (service !== 'iam') {
+                        errors.push('Impossible Cloud ARNs currently only support IAM service (arn:ipcld:iam::...)');
+                    }
+
+                    if (!canonicalId || canonicalId.length === 0) {
+                        errors.push('Impossible Cloud ARN requires a canonical ID (arn:ipcld:iam::YourCanonicalID:...)');
+                    }
+
+                    if (!resource || resource.length === 0) {
+                        errors.push('Impossible Cloud ARN requires a resource (e.g., user/username, policy/policyname)');
+                    } else if (!resource.includes('/')) {
+                        errors.push('Impossible Cloud resource must include type/name (e.g., user/username, policy/policyname)');
+                    }
+
+                    return {
+                        isValid: errors.length === 0,
+                        errors: errors,
+                        warnings: warnings
+                    };
+                }
+
+                // AWS ARN format: arn:partition:service:region:account-id:resource
                 const arnRegex = /^arn:(aws|aws-cn|aws-us-gov):([a-z0-9-]+):([a-z0-9-]*):([0-9]{12}|):(.+)$/;
 
                 if (!arnRegex.test(principal)) {
-                    errors.push('Invalid ARN format. Expected: arn:aws:service:region:account-id:resource');
+                    errors.push('Invalid ARN format. Expected: arn:aws:service:region:account-id:resource or arn:ipcld:iam::CanonicalID:resource');
                 } else {
-                    const parts = principal.split(':');
-                    const partition = parts[1];
                     const service = parts[2];
                     const region = parts[3];
                     const accountId = parts[4];
@@ -897,13 +931,17 @@ Click "Generate Policy" to create your bucket policy...</div>
 
                     // Validate partition
                     if (!['aws', 'aws-cn', 'aws-us-gov'].includes(partition)) {
-                        errors.push(`Invalid partition "${partition}". Must be: aws, aws-cn, or aws-us-gov`);
+                        errors.push(`Invalid partition "${partition}". Must be: aws, aws-cn, aws-us-gov, or ipcld (Impossible Cloud)`);
                     }
 
                     // Validate service (for S3 bucket policies, most common are IAM, S3, STS)
-                    const validServices = ['iam', 's3', 'sts', 'ec2', 'lambda', 'cloudfront', 'elasticloadbalancing', 'rds', 'dynamodb'];
-                    if (!validServices.includes(service)) {
+                    const validServices = ['iam', 's3', 'sts'];
+                    const awsOnlyServices = ['ec2', 'lambda', 'cloudfront', 'elasticloadbalancing', 'rds', 'dynamodb'];
+
+                    if (!validServices.includes(service) && !awsOnlyServices.includes(service)) {
                         warnings.push(`Service "${service}" is unusual for S3 bucket policies. Common services: iam, s3, sts`);
+                    } else if (awsOnlyServices.includes(service)) {
+                        warnings.push(`⚠ Service "${service}" is AWS-specific and not supported by Impossible Cloud. Use iam, s3, or sts instead.`);
                     }
 
                     // For IAM ARNs, validate account ID
@@ -949,7 +987,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                 if (/^\d{12}$/.test(principal)) {
                     warnings.push('Using just an account ID. Consider using full ARN format: arn:aws:iam::123456789012:root');
                 } else {
-                    errors.push('Principal must be "*", a valid ARN (arn:aws:...), service principal (service.amazonaws.com), or 12-digit account ID');
+                    errors.push('Principal must be "*", a valid ARN (arn:aws:... or arn:ipcld:...), canonical user ID (64-char hex), service principal (service.amazonaws.com), or 12-digit account ID');
                 }
             }
 
@@ -965,7 +1003,7 @@ Click "Generate Policy" to create your bucket policy...</div>
             if (!principal || principal.length === 0) {
                 return {
                     type: 'hint',
-                    message: '💡 Start typing: <code>*</code> for public, <code>arn:aws:iam::</code> for IAM, or <code>service.amazonaws.com</code> for service principal'
+                    message: '💡 Start typing: <code>*</code> for public, <code>arn:aws:iam::</code> for AWS IAM, <code>arn:ipcld:iam::</code> for Impossible Cloud, or 64-char hex for canonical ID'
                 };
             }
 
@@ -987,14 +1025,24 @@ Click "Generate Policy" to create your bucket policy...</div>
                 if (parts.length === 1 && principal.endsWith(':')) {
                     return {
                         type: 'hint',
-                        message: '💡 Next: partition → <code>arn:aws:</code> (or <code>aws-cn</code>, <code>aws-us-gov</code>)'
+                        message: '💡 Next: partition → <code>arn:aws:</code> for AWS, <code>arn:ipcld:</code> for Impossible Cloud'
                     };
                 }
 
                 // Stage 3: Typing partition
                 if (parts.length === 2 && !principal.endsWith(':')) {
                     const partition = parts[1];
-                    if (partition === 'aws' || partition === 'aws-cn' || partition === 'aws-us-gov') {
+                    if (partition === 'ipcld') {
+                        return {
+                            type: 'hint',
+                            message: '💡 Good! Impossible Cloud ARN. Now add service: <code>arn:ipcld:iam:</code>'
+                        };
+                    } else if ('ipcld'.startsWith(partition)) {
+                        return {
+                            type: 'hint',
+                            message: '💡 Continue: <code>ipcld</code> for Impossible Cloud or <code>aws</code> for AWS'
+                        };
+                    } else if (partition === 'aws' || partition === 'aws-cn' || partition === 'aws-us-gov') {
                         return {
                             type: 'hint',
                             message: `💡 Good! Now add colon and service: <code>arn:${partition}:</code>`
@@ -1009,19 +1057,51 @@ Click "Generate Policy" to create your bucket policy...</div>
 
                 // Stage 4: Typed partition, now need service
                 if (parts.length === 2 && principal.endsWith(':')) {
-                    return {
-                        type: 'hint',
-                        message: '💡 Next: service → <code>iam</code>, <code>s3</code>, or <code>sts</code> then <code>:</code>'
-                    };
+                    const partition = parts[1];
+                    if (partition === 'ipcld') {
+                        return {
+                            type: 'hint',
+                            message: '💡 Next: service → <code>iam</code> (Impossible Cloud only supports IAM currently)'
+                        };
+                    } else {
+                        return {
+                            type: 'hint',
+                            message: '💡 Next: service → <code>iam</code>, <code>s3</code>, or <code>sts</code> then <code>:</code>'
+                        };
+                    }
                 }
 
                 // Stage 5: Typing service
                 if (parts.length === 3 && !principal.endsWith(':')) {
+                    const partition = parts[1];
                     const service = parts[2];
-                    if (['iam', 's3', 'sts', 'ec2', 'lambda'].includes(service)) {
+
+                    if (partition === 'ipcld') {
+                        if (service === 'iam') {
+                            return {
+                                type: 'hint',
+                                message: '💡 Good! Now add <code>:</code> then region (leave empty): <code>arn:ipcld:iam:</code>'
+                            };
+                        } else if ('iam'.startsWith(service)) {
+                            return {
+                                type: 'hint',
+                                message: '💡 Continue: <code>iam</code>'
+                            };
+                        } else {
+                            return {
+                                type: 'hint',
+                                message: '💡 Impossible Cloud only supports <code>iam</code> service'
+                            };
+                        }
+                    } else if (['iam', 's3', 'sts'].includes(service)) {
                         return {
                             type: 'hint',
-                            message: `💡 Good! Now add colon and region: <code>arn:${parts[1]}:${service}:</code> (usually empty for IAM/S3)`
+                            message: `💡 Good! Now add colon and region: <code>arn:${partition}:${service}:</code> (usually empty for IAM/S3)`
+                        };
+                    } else if (['ec2', 'lambda', 'cloudfront', 'elasticloadbalancing', 'rds', 'dynamodb'].includes(service)) {
+                        return {
+                            type: 'hint',
+                            message: `⚠ Warning: <code>${service}</code> is AWS-specific and not supported by Impossible Cloud. Use <code>iam</code>, <code>s3</code>, or <code>sts</code>`
                         };
                     } else if ('iam'.startsWith(service) || 's3'.startsWith(service) || 'sts'.startsWith(service)) {
                         return {
@@ -1033,66 +1113,112 @@ Click "Generate Policy" to create your bucket policy...</div>
 
                 // Stage 6: Typed service, now need region (usually empty)
                 if (parts.length === 3 && principal.endsWith(':')) {
-                    return {
-                        type: 'hint',
-                        message: '💡 Next: region (usually empty for IAM/S3) → <code>:</code> then account ID'
-                    };
+                    const partition = parts[1];
+                    if (partition === 'ipcld') {
+                        return {
+                            type: 'hint',
+                            message: '💡 Next: region (leave empty for Impossible Cloud) → <code>:</code> then canonical ID'
+                        };
+                    } else {
+                        return {
+                            type: 'hint',
+                            message: '💡 Next: region (usually empty for IAM/S3) → <code>:</code> then account ID'
+                        };
+                    }
                 }
 
                 // Stage 7: Typing region (usually skipped)
                 if (parts.length === 4 && !principal.endsWith(':')) {
-                    return {
-                        type: 'hint',
-                        message: '💡 Most IAM/S3 ARNs leave region empty. Add <code>:</code> for account ID'
-                    };
-                }
-
-                // Stage 8: Need account ID
-                if (parts.length === 4 && principal.endsWith(':')) {
-                    return {
-                        type: 'hint',
-                        message: '💡 Next: 12-digit account ID → <code>123456789012</code> then <code>:</code>'
-                    };
-                }
-
-                // Stage 9: Typing account ID
-                if (parts.length === 5 && !principal.endsWith(':')) {
-                    const accountId = parts[4];
-                    const service = parts[2];
-
-                    if (accountId.length === 0) {
+                    const partition = parts[1];
+                    if (partition === 'ipcld') {
                         return {
                             type: 'hint',
-                            message: '💡 Enter your 12-digit AWS account ID'
-                        };
-                    } else if (!/^\d+$/.test(accountId)) {
-                        return {
-                            type: 'error',
-                            message: '✗ Account ID must contain only digits'
-                        };
-                    } else if (accountId.length < 12) {
-                        const remaining = 12 - accountId.length;
-                        return {
-                            type: 'hint',
-                            message: `💡 Account ID: ${accountId.length}/12 digits (${remaining} more needed)`
-                        };
-                    } else if (accountId.length === 12) {
-                        return {
-                            type: 'hint',
-                            message: `💡 Perfect! Now add <code>:</code> and resource (e.g., <code>user/username</code> or <code>root</code>)`
+                            message: '💡 Impossible Cloud ARNs leave region empty. Add <code>:</code> for canonical ID'
                         };
                     } else {
                         return {
-                            type: 'error',
-                            message: '✗ Account ID must be exactly 12 digits'
+                            type: 'hint',
+                            message: '💡 Most IAM/S3 ARNs leave region empty. Add <code>:</code> for account ID'
                         };
+                    }
+                }
+
+                // Stage 8: Need account ID or canonical ID
+                if (parts.length === 4 && principal.endsWith(':')) {
+                    const partition = parts[1];
+                    if (partition === 'ipcld') {
+                        return {
+                            type: 'hint',
+                            message: '💡 Next: Your Impossible Cloud canonical ID (alphanumeric string) then <code>:</code>'
+                        };
+                    } else {
+                        return {
+                            type: 'hint',
+                            message: '💡 Next: 12-digit account ID → <code>123456789012</code> then <code>:</code>'
+                        };
+                    }
+                }
+
+                // Stage 9: Typing account ID or canonical ID
+                if (parts.length === 5 && !principal.endsWith(':')) {
+                    const accountId = parts[4];
+                    const partition = parts[1];
+                    const service = parts[2];
+
+                    if (partition === 'ipcld') {
+                        if (accountId.length === 0) {
+                            return {
+                                type: 'hint',
+                                message: '💡 Enter your Impossible Cloud canonical ID'
+                            };
+                        } else if (accountId.length > 0) {
+                            return {
+                                type: 'hint',
+                                message: '💡 Continue entering canonical ID, then add <code>:</code> for resource'
+                            };
+                        }
+                    } else {
+                        if (accountId.length === 0) {
+                            return {
+                                type: 'hint',
+                                message: '💡 Enter your 12-digit AWS account ID'
+                            };
+                        } else if (!/^\d+$/.test(accountId)) {
+                            return {
+                                type: 'error',
+                                message: '✗ Account ID must contain only digits'
+                            };
+                        } else if (accountId.length < 12) {
+                            const remaining = 12 - accountId.length;
+                            return {
+                                type: 'hint',
+                                message: `💡 Account ID: ${accountId.length}/12 digits (${remaining} more needed)`
+                            };
+                        } else if (accountId.length === 12) {
+                            return {
+                                type: 'hint',
+                                message: `💡 Perfect! Now add <code>:</code> and resource (e.g., <code>user/username</code> or <code>root</code>)`
+                            };
+                        } else {
+                            return {
+                                type: 'error',
+                                message: '✗ Account ID must be exactly 12 digits'
+                            };
+                        }
                     }
                 }
 
                 // Stage 10: Need resource
                 if (parts.length === 5 && principal.endsWith(':')) {
+                    const partition = parts[1];
                     const service = parts[2];
-                    if (service === 'iam') {
+
+                    if (partition === 'ipcld') {
+                        return {
+                            type: 'hint',
+                            message: '💡 Next: resource → <code>user/username</code> or <code>policy/policyname</code>'
+                        };
+                    } else if (service === 'iam') {
                         return {
                             type: 'hint',
                             message: '💡 Next: resource → <code>user/username</code>, <code>role/rolename</code>, or <code>root</code>'
@@ -1107,10 +1233,41 @@ Click "Generate Policy" to create your bucket policy...</div>
 
                 // Stage 11: Typing resource
                 if (parts.length >= 6) {
+                    const partition = parts[1];
                     const service = parts[2];
                     const resource = parts.slice(5).join(':');
 
-                    if (service === 'iam') {
+                    if (partition === 'ipcld') {
+                        if (resource.includes('/')) {
+                            const resourceParts = resource.split('/');
+                            const resourceType = resourceParts[0];
+                            const resourceName = resourceParts[1];
+
+                            if (['user', 'policy'].includes(resourceType)) {
+                                if (resourceName && resourceName.length > 0) {
+                                    return {
+                                        type: 'success',
+                                        message: `✓ Valid Impossible Cloud ${resourceType} ARN`
+                                    };
+                                } else {
+                                    return {
+                                        type: 'hint',
+                                        message: `💡 Add the ${resourceType} name after the slash`
+                                    };
+                                }
+                            } else if ('user'.startsWith(resourceType) || 'policy'.startsWith(resourceType)) {
+                                return {
+                                    type: 'hint',
+                                    message: '💡 Impossible Cloud supports: <code>user/</code> or <code>policy/</code>'
+                                };
+                            }
+                        } else if ('user'.startsWith(resource) || 'policy'.startsWith(resource)) {
+                            return {
+                                type: 'hint',
+                                message: '💡 Continue: <code>user/name</code> or <code>policy/name</code>'
+                            };
+                        }
+                    } else if (service === 'iam') {
                         if (resource === 'root') {
                             return {
                                 type: 'success',
