@@ -597,39 +597,341 @@ Click "Generate Policy" to create your bucket policy...</div>
 
         function validatePolicy() {
             const policyText = document.getElementById('policyOutput').textContent;
+            const errors = [];
+            const warnings = [];
+
+            // Step 1: Validate JSON syntax
+            let policy;
             try {
-                const policy = JSON.parse(policyText);
-
-                // Basic validation
-                const errors = [];
-                if (!policy.Version) errors.push('Missing Version field');
-                if (!policy.Statement || !Array.isArray(policy.Statement)) errors.push('Missing or invalid Statement array');
-                if (policy.Statement && policy.Statement.length === 0) errors.push('Statement array is empty');
-
-                policy.Statement && policy.Statement.forEach((stmt, idx) => {
-                    if (!stmt.Effect) errors.push(`Statement ${idx}: Missing Effect`);
-                    if (!stmt.Action) errors.push(`Statement ${idx}: Missing Action`);
-                    if (!stmt.Resource) errors.push(`Statement ${idx}: Missing Resource`);
-                });
-
-                if (errors.length > 0) {
-                    showNotification('Validation errors: ' + errors.join(', '), 'error');
-                } else {
-                    showNotification('✓ Policy is valid JSON and has required fields!');
-                }
+                policy = JSON.parse(policyText);
             } catch (e) {
-                showNotification('Invalid JSON: ' + e.message, 'error');
+                showNotification('❌ Invalid JSON syntax: ' + e.message, 'error');
+                return;
             }
+
+            // Step 2: Validate root policy structure
+            if (typeof policy !== 'object' || policy === null) {
+                errors.push('Policy must be a JSON object');
+            }
+
+            // Step 3: Validate Version field
+            if (!policy.Version) {
+                errors.push('Missing required field: Version');
+            } else if (typeof policy.Version !== 'string') {
+                errors.push('Version must be a string');
+            } else if (policy.Version !== '2012-10-17' && policy.Version !== '2008-10-17') {
+                errors.push(`Invalid Version: "${policy.Version}". Must be "2012-10-17" or "2008-10-17"`);
+            } else if (policy.Version === '2008-10-17') {
+                warnings.push('Version "2008-10-17" is deprecated. Use "2012-10-17"');
+            }
+
+            // Step 4: Validate Statement array
+            if (!policy.Statement) {
+                errors.push('Missing required field: Statement');
+            } else if (!Array.isArray(policy.Statement)) {
+                errors.push('Statement must be an array');
+            } else if (policy.Statement.length === 0) {
+                errors.push('Statement array cannot be empty');
+            } else {
+                // Validate each statement
+                policy.Statement.forEach((stmt, idx) => {
+                    validateStatement(stmt, idx, errors, warnings);
+                });
+            }
+
+            // Step 5: Check for unknown root-level fields
+            const validRootFields = ['Version', 'Id', 'Statement'];
+            Object.keys(policy).forEach(key => {
+                if (!validRootFields.includes(key)) {
+                    warnings.push(`Unknown root-level field: "${key}"`);
+                }
+            });
+
+            // Step 6: Validate Id field if present
+            if (policy.Id && typeof policy.Id !== 'string') {
+                errors.push('Id field must be a string');
+            }
+
+            // Display results
+            if (errors.length > 0) {
+                const errorMsg = '❌ Validation failed:\n• ' + errors.join('\n• ');
+                showNotification(errorMsg, 'error');
+            } else if (warnings.length > 0) {
+                const warnMsg = '⚠️ Policy is valid but has warnings:\n• ' + warnings.join('\n• ');
+                showNotification(warnMsg, 'warning');
+            } else {
+                showNotification('✅ Policy is valid and follows AWS best practices!', 'success');
+            }
+        }
+
+        function validateStatement(stmt, idx, errors, warnings) {
+            const prefix = `Statement[${idx}]`;
+
+            // Check if statement is an object
+            if (typeof stmt !== 'object' || stmt === null) {
+                errors.push(`${prefix}: Must be an object`);
+                return;
+            }
+
+            // Validate Sid (optional)
+            if (stmt.Sid !== undefined) {
+                if (typeof stmt.Sid !== 'string') {
+                    errors.push(`${prefix}: Sid must be a string`);
+                } else if (!/^[a-zA-Z0-9]+$/.test(stmt.Sid)) {
+                    errors.push(`${prefix}: Sid must contain only alphanumeric characters`);
+                }
+            }
+
+            // Validate Effect (required)
+            if (!stmt.Effect) {
+                errors.push(`${prefix}: Missing required field "Effect"`);
+            } else if (stmt.Effect !== 'Allow' && stmt.Effect !== 'Deny') {
+                errors.push(`${prefix}: Effect must be "Allow" or "Deny", got "${stmt.Effect}"`);
+            }
+
+            // Validate Principal/NotPrincipal (one required for bucket policies)
+            if (!stmt.Principal && !stmt.NotPrincipal) {
+                errors.push(`${prefix}: Missing "Principal" or "NotPrincipal"`);
+            }
+            if (stmt.Principal && stmt.NotPrincipal) {
+                errors.push(`${prefix}: Cannot have both "Principal" and "NotPrincipal"`);
+            }
+            if (stmt.Principal) {
+                validatePrincipal(stmt.Principal, prefix, errors, warnings);
+            }
+            if (stmt.NotPrincipal) {
+                validatePrincipal(stmt.NotPrincipal, prefix + '.NotPrincipal', errors, warnings);
+            }
+
+            // Validate Action/NotAction (one required)
+            if (!stmt.Action && !stmt.NotAction) {
+                errors.push(`${prefix}: Missing "Action" or "NotAction"`);
+            }
+            if (stmt.Action && stmt.NotAction) {
+                errors.push(`${prefix}: Cannot have both "Action" and "NotAction"`);
+            }
+            if (stmt.Action) {
+                validateActions(stmt.Action, prefix + '.Action', errors, warnings);
+            }
+            if (stmt.NotAction) {
+                validateActions(stmt.NotAction, prefix + '.NotAction', errors, warnings);
+            }
+
+            // Validate Resource/NotResource (one required)
+            if (!stmt.Resource && !stmt.NotResource) {
+                errors.push(`${prefix}: Missing "Resource" or "NotResource"`);
+            }
+            if (stmt.Resource && stmt.NotResource) {
+                errors.push(`${prefix}: Cannot have both "Resource" and "NotResource"`);
+            }
+            if (stmt.Resource) {
+                validateResources(stmt.Resource, prefix + '.Resource', errors, warnings);
+            }
+            if (stmt.NotResource) {
+                validateResources(stmt.NotResource, prefix + '.NotResource', errors, warnings);
+            }
+
+            // Validate Condition (optional)
+            if (stmt.Condition) {
+                validateCondition(stmt.Condition, prefix + '.Condition', errors, warnings);
+            }
+
+            // Check for unknown statement fields
+            const validStmtFields = ['Sid', 'Effect', 'Principal', 'NotPrincipal', 'Action', 'NotAction', 'Resource', 'NotResource', 'Condition'];
+            Object.keys(stmt).forEach(key => {
+                if (!validStmtFields.includes(key)) {
+                    warnings.push(`${prefix}: Unknown field "${key}"`);
+                }
+            });
+        }
+
+        function validatePrincipal(principal, prefix, errors, warnings) {
+            if (principal === '*') {
+                warnings.push(`${prefix}: Using wildcard (*) grants public access - ensure this is intentional`);
+                return;
+            }
+
+            if (typeof principal === 'string') {
+                errors.push(`${prefix}: String principals other than "*" are not valid. Use {"AWS": "..."} format`);
+                return;
+            }
+
+            if (typeof principal !== 'object' || principal === null) {
+                errors.push(`${prefix}: Must be "*" or an object`);
+                return;
+            }
+
+            const validPrincipalKeys = ['AWS', 'Service', 'Federated', 'CanonicalUser'];
+            Object.keys(principal).forEach(key => {
+                if (!validPrincipalKeys.includes(key)) {
+                    errors.push(`${prefix}: Unknown principal type "${key}". Valid types: ${validPrincipalKeys.join(', ')}`);
+                }
+            });
+
+            // Validate AWS principals
+            if (principal.AWS) {
+                const awsPrincipals = Array.isArray(principal.AWS) ? principal.AWS : [principal.AWS];
+                awsPrincipals.forEach((arn, idx) => {
+                    if (arn === '*') {
+                        warnings.push(`${prefix}.AWS[${idx}]: Using "*" grants public access`);
+                    } else if (typeof arn !== 'string') {
+                        errors.push(`${prefix}.AWS[${idx}]: Must be a string`);
+                    } else if (!arn.startsWith('arn:aws:iam::') && arn !== '*') {
+                        errors.push(`${prefix}.AWS[${idx}]: Invalid ARN format "${arn}"`);
+                    } else if (!/^\d{12}$/.test(arn.split('::')[1]?.split(':')[0] || '')) {
+                        warnings.push(`${prefix}.AWS[${idx}]: Account ID should be 12 digits`);
+                    }
+                });
+            }
+
+            // Validate Service principals
+            if (principal.Service) {
+                const services = Array.isArray(principal.Service) ? principal.Service : [principal.Service];
+                services.forEach((svc, idx) => {
+                    if (typeof svc !== 'string') {
+                        errors.push(`${prefix}.Service[${idx}]: Must be a string`);
+                    } else if (!svc.includes('.amazonaws.com') && svc !== 's3.amazonaws.com' && svc !== 'cloudfront.amazonaws.com') {
+                        warnings.push(`${prefix}.Service[${idx}]: Service principal should typically end with .amazonaws.com`);
+                    }
+                });
+            }
+        }
+
+        function validateActions(actions, prefix, errors, warnings) {
+            const actionList = Array.isArray(actions) ? actions : [actions];
+
+            if (actionList.length === 0) {
+                errors.push(`${prefix}: Cannot be empty`);
+                return;
+            }
+
+            const validS3Actions = [
+                's3:*',
+                's3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:GetObjectVersion', 's3:DeleteObjectVersion',
+                's3:GetObjectAcl', 's3:PutObjectAcl', 's3:GetObjectVersionAcl', 's3:PutObjectVersionAcl',
+                's3:GetObjectTorrent', 's3:GetObjectVersionTorrent',
+                's3:ListBucket', 's3:ListBucketVersions', 's3:ListBucketMultipartUploads',
+                's3:GetBucketLocation', 's3:GetBucketVersioning', 's3:GetBucketAcl', 's3:PutBucketAcl',
+                's3:GetBucketCORS', 's3:PutBucketCORS', 's3:DeleteBucketCORS',
+                's3:GetBucketWebsite', 's3:PutBucketWebsite', 's3:DeleteBucketWebsite',
+                's3:GetBucketLogging', 's3:PutBucketLogging',
+                's3:GetBucketNotification', 's3:PutBucketNotification',
+                's3:GetBucketPolicy', 's3:PutBucketPolicy', 's3:DeleteBucketPolicy',
+                's3:GetBucketRequestPayment', 's3:PutBucketRequestPayment',
+                's3:GetBucketTagging', 's3:PutBucketTagging', 's3:DeleteBucketTagging',
+                's3:GetLifecycleConfiguration', 's3:PutLifecycleConfiguration',
+                's3:GetReplicationConfiguration', 's3:PutReplicationConfiguration',
+                's3:GetAccelerateConfiguration', 's3:PutAccelerateConfiguration',
+                's3:GetEncryptionConfiguration', 's3:PutEncryptionConfiguration',
+                's3:GetBucketObjectLockConfiguration', 's3:PutBucketObjectLockConfiguration',
+                's3:GetBucketPublicAccessBlock', 's3:PutBucketPublicAccessBlock',
+                's3:GetObjectLegalHold', 's3:PutObjectLegalHold',
+                's3:GetObjectRetention', 's3:PutObjectRetention',
+                's3:BypassGovernanceRetention',
+                's3:AbortMultipartUpload', 's3:ListMultipartUploadParts',
+                's3:RestoreObject'
+            ];
+
+            actionList.forEach((action, idx) => {
+                if (typeof action !== 'string') {
+                    errors.push(`${prefix}[${idx}]: Must be a string`);
+                } else if (!action.includes(':')) {
+                    errors.push(`${prefix}[${idx}]: Invalid format "${action}". Must be "service:action"`);
+                } else {
+                    const [service, actionName] = action.split(':');
+                    if (service !== 's3' && action !== '*') {
+                        warnings.push(`${prefix}[${idx}]: "${action}" is not an S3 action`);
+                    } else if (service === 's3' && actionName !== '*' && !validS3Actions.includes(action) && !actionName.includes('*')) {
+                        warnings.push(`${prefix}[${idx}]: "${action}" may not be a valid S3 action`);
+                    }
+                }
+            });
+        }
+
+        function validateResources(resources, prefix, errors, warnings) {
+            const resourceList = Array.isArray(resources) ? resources : [resources];
+
+            if (resourceList.length === 0) {
+                errors.push(`${prefix}: Cannot be empty`);
+                return;
+            }
+
+            resourceList.forEach((resource, idx) => {
+                if (typeof resource !== 'string') {
+                    errors.push(`${prefix}[${idx}]: Must be a string`);
+                } else if (!resource.startsWith('arn:aws:s3:::') && resource !== '*') {
+                    errors.push(`${prefix}[${idx}]: Must be a valid S3 ARN (arn:aws:s3:::...) or "*"`);
+                } else if (resource.startsWith('arn:aws:s3:::')) {
+                    const bucketPart = resource.substring(13); // Remove 'arn:aws:s3:::'
+                    if (bucketPart === '') {
+                        errors.push(`${prefix}[${idx}]: Missing bucket name in ARN`);
+                    } else if (bucketPart.includes('//')) {
+                        errors.push(`${prefix}[${idx}]: Invalid path - contains double slashes`);
+                    }
+
+                    // Check if it's a bucket ARN (no /) vs object ARN (has /)
+                    const hasPath = bucketPart.includes('/');
+                    if (!hasPath && bucketPart.length > 63) {
+                        errors.push(`${prefix}[${idx}]: Bucket name too long (max 63 characters)`);
+                    }
+                    if (!hasPath && !/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(bucketPart)) {
+                        warnings.push(`${prefix}[${idx}]: Bucket name may not follow S3 naming rules`);
+                    }
+                }
+            });
+        }
+
+        function validateCondition(condition, prefix, errors, warnings) {
+            if (typeof condition !== 'object' || condition === null || Array.isArray(condition)) {
+                errors.push(`${prefix}: Must be an object`);
+                return;
+            }
+
+            const validConditionOperators = [
+                'StringEquals', 'StringNotEquals', 'StringLike', 'StringNotLike',
+                'StringEqualsIgnoreCase', 'StringNotEqualsIgnoreCase',
+                'NumericEquals', 'NumericNotEquals', 'NumericLessThan', 'NumericLessThanEquals',
+                'NumericGreaterThan', 'NumericGreaterThanEquals',
+                'DateEquals', 'DateNotEquals', 'DateLessThan', 'DateLessThanEquals',
+                'DateGreaterThan', 'DateGreaterThanEquals',
+                'Bool', 'BinaryEquals',
+                'IpAddress', 'NotIpAddress',
+                'ArnEquals', 'ArnLike', 'ArnNotEquals', 'ArnNotLike',
+                'Null'
+            ];
+
+            Object.keys(condition).forEach(operator => {
+                if (!validConditionOperators.includes(operator)) {
+                    errors.push(`${prefix}: Unknown condition operator "${operator}"`);
+                }
+
+                const conditionBlock = condition[operator];
+                if (typeof conditionBlock !== 'object' || conditionBlock === null || Array.isArray(conditionBlock)) {
+                    errors.push(`${prefix}.${operator}: Must be an object`);
+                }
+            });
         }
 
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
-            notification.style.background = type === 'error' ? '#dc3545' : '#28a745';
+            notification.style.whiteSpace = 'pre-line';
+            notification.style.textAlign = 'left';
+            notification.style.maxWidth = '500px';
+
+            if (type === 'error') {
+                notification.style.background = '#dc3545';
+            } else if (type === 'warning') {
+                notification.style.background = '#ff9800';
+            } else {
+                notification.style.background = '#28a745';
+            }
+
             notification.classList.add('show');
+            const timeout = type === 'error' || type === 'warning' ? 8000 : 3000;
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 3000);
+            }, timeout);
         }
 
         // Initialize with default empty policy

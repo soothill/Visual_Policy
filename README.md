@@ -25,7 +25,7 @@ A simple, user-friendly web-based utility for creating AWS S3 bucket policies. P
   - **Manual editing** - Click directly in the policy output to edit the JSON
   - Copy to clipboard
   - Download as JSON file
-  - JSON validation
+  - **Strict JSON validation** - Comprehensive validation of policy structure, AWS compliance, and best practices
   - Clear form functionality
 
 ## Live Demo
@@ -141,6 +141,52 @@ Or IP address restrictions:
     "aws:SourceIp": "203.0.113.0/24"
   }
 }
+```
+
+### Policy Validation
+
+The built-in validator performs comprehensive checks to ensure your policy is valid and follows AWS best practices. Click the "✓ Validate JSON" button to check your policy.
+
+**What the Validator Checks:**
+
+**Errors (must be fixed):**
+- ✓ Valid JSON syntax
+- ✓ Required fields: `Version` and `Statement`
+- ✓ Version must be "2012-10-17" or "2008-10-17"
+- ✓ Statement must be a non-empty array
+- ✓ Each statement must have `Effect` (Allow/Deny)
+- ✓ Each statement must have `Principal` or `NotPrincipal`
+- ✓ Each statement must have `Action` or `NotAction`
+- ✓ Each statement must have `Resource` or `NotResource`
+- ✓ Effect must be exactly "Allow" or "Deny"
+- ✓ Principal format validation (ARN structure)
+- ✓ Action format validation (service:action)
+- ✓ Resource ARN format (must start with `arn:aws:s3:::`)
+- ✓ Bucket name length and format
+- ✓ Condition operators must be valid IAM operators
+- ✓ No duplicate Principal/NotPrincipal, Action/NotAction, or Resource/NotResource
+- ✓ Sid must be alphanumeric only
+- ✓ Account IDs must be 12 digits
+
+**Warnings (best practices):**
+- ⚠️ Using deprecated Version "2008-10-17"
+- ⚠️ Wildcard (*) principal grants public access
+- ⚠️ Non-S3 actions in S3 bucket policy
+- ⚠️ Unknown S3 actions
+- ⚠️ Service principals should end with .amazonaws.com
+- ⚠️ Unknown or custom fields in policy
+
+**Example Validation Output:**
+
+```
+✅ Policy is valid and follows AWS best practices!
+```
+
+Or with warnings:
+```
+⚠️ Policy is valid but has warnings:
+• Principal: Using wildcard (*) grants public access - ensure this is intentional
+• Version "2008-10-17" is deprecated. Use "2012-10-17"
 ```
 
 ## Common S3 Actions
