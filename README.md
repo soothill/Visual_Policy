@@ -13,11 +13,9 @@ A simple, user-friendly web-based utility for creating S3 bucket policies for Im
 
 - **Flexible Configuration**:
   - **Real-time bucket name validation** - Ensures compliance with AWS S3 naming standards
-  - **Progressive ARN suggestions** - Step-by-step guidance while typing ARNs, not just error messages
   - **Impossible Cloud compatible S3 actions** - 33+ S3 actions organized in 8 collapsible categories, all compatible with Impossible Cloud
   - Specify bucket name and resource paths
   - Choose Allow/Deny effects
-  - Configure principals (IAM users, accounts, or public access)
   - Add custom actions via textarea for anything not listed
   - Optional IAM conditions support
 
@@ -70,7 +68,6 @@ npx http-server
 2. **Enter Bucket Name**: Specify your S3 bucket name (required)
 3. **Configure Policy**:
    - Select Effect (Allow/Deny)
-   - Enter Principal (AWS user/account or * for public)
    - Check desired actions (GetObject, PutObject, etc.)
    - Specify resource path within the bucket
 4. **Generate Policy**: Click the "Generate Policy" button
@@ -103,8 +100,7 @@ After generating a policy, you can click directly in the policy output area to m
 
 1. Click "Private Read/Write" template
 2. Update bucket name
-3. Update principal with your IAM user ARN: `arn:aws:iam::123456789012:user/YourUsername`
-4. Click "Generate Policy"
+3. Click "Generate Policy"
 
 ### Bucket Name Validation
 
@@ -131,107 +127,14 @@ The application validates bucket names in real-time as you type, ensuring they c
 - ✅ Valid: `my-bucket-name`, `example.bucket.123`, `prod-data-2024`
 - ❌ Invalid: `MyBucket` (uppercase), `my_bucket` (underscore), `my..bucket` (adjacent periods)
 
-### Principal ARN Validation
+### Principal Configuration
 
-The application provides **progressive, helpful suggestions** as you type ARNs, guiding you through each field step-by-step rather than just showing errors. This makes it easy to construct valid ARNs even if you're unfamiliar with the format.
+**Note:** Principal specification is currently **hidden** in the Impossible Cloud Bucket Policy Generator as explicit principal configuration in bucket policies is not currently supported by Impossible Cloud's S3-compatible API.
 
-**Supported Principal Formats:**
-
-1. **Wildcard (Public Access)**
-   - `*` - Grants public access (shows security warning)
-
-2. **AWS IAM User/Role ARNs**
-   - Format: `arn:aws:iam::123456789012:user/username`
-   - Format: `arn:aws:iam::123456789012:role/rolename`
-   - Format: `arn:aws:iam::123456789012:root` (entire account)
-
-3. **Impossible Cloud IAM ARNs**
-   - Format: `arn:ipcld:iam::YourCanonicalID:user/username`
-   - Format: `arn:ipcld:iam::YourCanonicalID:policy/policyname`
-
-4. **Canonical User IDs**
-   - Format: 64-character hexadecimal string
-   - Example: `79a59df900b949e55d96a1e698fbacedfd6e09d98eacf8f8d5218e7cd47ef2be`
-   - Used by Impossible Cloud and S3-compatible services
-
-5. **Service Principals**
-   - Format: `s3.amazonaws.com`
-   - ⚠ Note: AWS service principals may not be supported by Impossible Cloud
-
-6. **Account IDs**
-   - Format: `123456789012` (12 digits)
-
-**Validation Rules:**
-- ✓ AWS ARN format: `arn:partition:service:region:account-id:resource`
-- ✓ Impossible Cloud ARN format: `arn:ipcld:iam::CanonicalID:resource`
-- ✓ Valid AWS partitions: `aws`, `aws-cn`, `aws-us-gov`
-- ✓ AWS account ID must be exactly 12 digits
-- ✓ IAM ARNs require resource type (user, role, group, or root)
-- ✓ Impossible Cloud ARNs require canonical ID and resource (user/name or policy/name)
-- ✓ Service principals must end with `.amazonaws.com` or `.amazon.com`
-- ✓ Canonical user IDs must be 64-character hexadecimal strings
-- ⚠ Warns about AWS-specific services (ec2, lambda, cloudfront, etc.) not supported by Impossible Cloud
-
-**Progressive Suggestions:**
-
-As you type, the system guides you through each part of the ARN:
-
-**For AWS ARNs:**
-1. **Starting out**: "💡 Start typing: `*` for public, `arn:aws:iam::` for AWS IAM, `arn:ipcld:iam::` for Impossible Cloud..."
-2. **After `arn:`**: "💡 Next: partition → `arn:aws:` for AWS, `arn:ipcld:` for Impossible Cloud"
-3. **After `arn:aws:`**: "💡 Next: service → `iam`, `s3`, or `sts` then `:`"
-4. **After `arn:aws:iam::`**: "💡 Next: 12-digit account ID → `123456789012` then `:`"
-5. **While typing account**: "💡 Account ID: 5/12 digits (7 more needed)"
-6. **After account ID**: "💡 Perfect! Now add `:` and resource (e.g., `user/username` or `root`)"
-7. **After `:`**: "💡 Next: resource → Examples: `user/alice`, `role/S3AccessRole`, `group/Developers`, or `root`"
-8. **Typing resource type**: "💡 Add the user name. Examples: `user/alice`, `user/developers/john`"
-9. **Complete**: "✓ Valid IAM user ARN"
-
-**For Impossible Cloud ARNs:**
-1. **After `arn:ipcld:`**: "💡 Next: service → `iam` (Impossible Cloud only supports IAM currently)"
-2. **After `arn:ipcld:iam::`**: "💡 Next: Your Impossible Cloud canonical ID then `:`"
-3. **While typing canonical ID**: "💡 Continue entering canonical ID, then add `:` for resource"
-4. **After canonical ID**: "💡 Next: resource → Examples: `user/alice`, `user/bob`, `policy/MyBucketPolicy`"
-5. **Typing resource type**: "💡 Add the user name. Examples: `user/alice` or `user/bob`"
-6. **Complete**: "✓ Valid Impossible Cloud user ARN"
-
-**Visual Feedback:**
-- 🔵 Blue hint box = Helpful suggestion for next step
-- 🟢 Green border = Valid ARN format
-- 🔴 Red border = Invalid ARN format
-- 🟠 Orange warning = Valid but with warnings (e.g., public access, unusual service)
-- Progress tracking for account IDs (e.g., "5/12 digits")
-
-**Examples:**
-
-Valid ARNs:
-```
-*
-arn:aws:iam::123456789012:user/alice
-arn:aws:iam::123456789012:role/S3AccessRole
-arn:aws:iam::123456789012:root
-arn:ipcld:iam::abc123def456:user/bob
-arn:ipcld:iam::xyz789ghi012:policy/my-policy
-79a59df900b949e55d96a1e698fbacedfd6e09d98eacf8f8d5218e7cd47ef2be (canonical ID)
-s3.amazonaws.com (⚠ warning: may not work with Impossible Cloud)
-123456789012
-```
-
-Invalid ARNs:
-```
-arn:aws:iam::12345:user/alice                ✗ (account ID must be 12 digits)
-arn:aws:iam::123456789012:alice              ✗ (missing resource type)
-arn:invalid:iam::123456789012:user/bob       ✗ (invalid partition)
-arn:ipcld:s3::canonical123:bucket/mybucket   ✗ (Impossible Cloud only supports IAM service)
-arn:ipcld:iam::canonical123:alice            ✗ (missing resource type)
-service.example.com                          ✗ (must end with .amazonaws.com)
-```
-
-**Security and Compatibility Warnings:**
-- Using `*` triggers a warning about public access
-- AWS service principals (*.amazonaws.com) trigger warning about Impossible Cloud compatibility
-- AWS-specific services (ec2, lambda, cloudfront, etc.) trigger warnings
-- Just using an account ID suggests using full ARN format
+Bucket policies generated by this tool will work without explicit principal definitions. Access control should be managed through:
+- **IAM policies** attached to users and groups
+- **Bucket policies** that define which actions are allowed on the bucket
+- **Access keys** and credentials managed through the Impossible Cloud console
 
 ### S3 Actions Selection (Impossible Cloud Compatible)
 

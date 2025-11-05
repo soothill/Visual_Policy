@@ -469,7 +469,8 @@
                     <small>Allow or Deny the specified actions</small>
                 </div>
 
-                <div class="form-group">
+                <!-- Principal field hidden - not currently supported by Impossible Cloud -->
+                <div class="form-group" style="display: none;">
                     <label for="principal">Principal</label>
                     <input type="text" id="principal" placeholder='* or arn:aws:iam::123456789012:user/username'>
                     <small>AWS account, IAM user, service principal, or * for public access</small>
