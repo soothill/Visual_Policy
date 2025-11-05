@@ -1454,15 +1454,26 @@ Click "Generate Policy" to create your bucket policy...</div>
                 objectLockVersioning: {
                     effect: 'Allow',
                     actions: [
+                        // Basic read/write permissions
+                        's3:GetObject',
+                        's3:PutObject',
+                        's3:DeleteObject',
+                        's3:ListBucket',
+                        's3:GetObjectAttributes',
+                        // Object Lock specific permissions
                         's3:GetObjectLockConfiguration',
                         's3:PutObjectLockConfiguration',
                         's3:BypassGovernanceRetention',
+                        // Versioning permissions
                         's3:GetBucketVersioning',
                         's3:PutBucketVersioning',
-                        's3:ListBucketVersions'
+                        's3:ListBucketVersions',
+                        's3:GetObjectVersion',
+                        's3:DeleteObjectVersion',
+                        's3:GetObjectVersionAttributes'
                     ],
                     resourcePath: '*',
-                    description: 'Enable object lock and versioning configuration for bucket'
+                    description: 'Enable object lock and versioning with read/write access'
                 }
             };
 
