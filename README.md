@@ -15,11 +15,11 @@ A simple, user-friendly web-based utility for creating AWS S3 bucket policies. P
 - **Flexible Configuration**:
   - **Real-time bucket name validation** - Ensures compliance with AWS S3 naming standards
   - **Progressive ARN suggestions** - Step-by-step guidance while typing ARNs, not just error messages
+  - **Comprehensive S3 actions** - 60+ S3 actions organized in 9 collapsible categories
   - Specify bucket name and resource paths
   - Choose Allow/Deny effects
   - Configure principals (IAM users, accounts, or public access)
-  - Select common S3 actions with checkboxes
-  - Add custom actions
+  - Add custom actions via textarea for anything not listed
   - Optional IAM conditions support
 
 - **Policy Management**:
@@ -214,6 +214,45 @@ service.example.com                     ✗ (must end with .amazonaws.com)
 - Using `*` triggers a warning about public access
 - Unusual services for S3 bucket policies trigger warnings
 - Just using an account ID suggests using full ARN format
+
+### S3 Actions Selection
+
+The application provides **60+ S3 actions** organized into 9 categories for easy selection. Click any category header to expand/collapse it.
+
+**Action Categories:**
+
+1. **📄 Object Operations** (6 actions)
+   - GetObject, PutObject, DeleteObject, GetObjectAttributes, GetObjectTorrent, RestoreObject
+
+2. **🗂️ Bucket Operations** (6 actions)
+   - ListBucket, ListBucketVersions, ListBucketMultipartUploads, GetBucketLocation, GetBucketVersioning, PutBucketVersioning
+
+3. **🔐 Access Control (ACL)** (9 actions)
+   - GetObjectAcl, PutObjectAcl, GetBucketAcl, PutBucketAcl, GetBucketPolicy, PutBucketPolicy, DeleteBucketPolicy, GetBucketPublicAccessBlock, PutBucketPublicAccessBlock
+
+4. **🔄 Versioning** (5 actions)
+   - GetObjectVersion, DeleteObjectVersion, GetObjectVersionAcl, PutObjectVersionAcl, GetObjectVersionTorrent
+
+5. **📤 Multipart Upload** (2 actions)
+   - AbortMultipartUpload, ListMultipartUploadParts
+
+6. **⚙️ Bucket Configuration** (15 actions)
+   - CORS, Website, Logging, Notification, Tagging, RequestPayment settings
+
+7. **♻️ Lifecycle & Replication** (4 actions)
+   - GetLifecycleConfiguration, PutLifecycleConfiguration, GetReplicationConfiguration, PutReplicationConfiguration
+
+8. **🔒 Encryption & Security** (9 actions)
+   - Encryption configuration, Object Lock, Legal Hold, Retention policies
+
+9. **🚀 Advanced** (3 actions)
+   - Transfer Acceleration, s3:* (all actions)
+
+**Usage Tips:**
+- Object Operations category is expanded by default for quick access to common actions
+- Other categories start collapsed to keep the interface clean
+- Select `s3:*` in the Advanced category to grant all S3 permissions
+- Use the "Additional Actions" textarea for any actions not in the list
 
 ### Advanced Features
 
