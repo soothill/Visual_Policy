@@ -1912,20 +1912,45 @@ Click "Generate Policy" to create your bucket policy...</div>
             }
 
             const validConditionOperators = [
+                // String operators
                 'StringEquals', 'StringNotEquals', 'StringLike', 'StringNotLike',
                 'StringEqualsIgnoreCase', 'StringNotEqualsIgnoreCase',
+                // String operators with IfExists
+                'StringEqualsIfExists', 'StringNotEqualsIfExists', 'StringLikeIfExists', 'StringNotLikeIfExists',
+                'StringEqualsIgnoreCaseIfExists', 'StringNotEqualsIgnoreCaseIfExists',
+                // Numeric operators
                 'NumericEquals', 'NumericNotEquals', 'NumericLessThan', 'NumericLessThanEquals',
                 'NumericGreaterThan', 'NumericGreaterThanEquals',
+                // Numeric operators with IfExists
+                'NumericEqualsIfExists', 'NumericNotEqualsIfExists', 'NumericLessThanIfExists', 'NumericLessThanEqualsIfExists',
+                'NumericGreaterThanIfExists', 'NumericGreaterThanEqualsIfExists',
+                // Date operators
                 'DateEquals', 'DateNotEquals', 'DateLessThan', 'DateLessThanEquals',
                 'DateGreaterThan', 'DateGreaterThanEquals',
+                // Date operators with IfExists
+                'DateEqualsIfExists', 'DateNotEqualsIfExists', 'DateLessThanIfExists', 'DateLessThanEqualsIfExists',
+                'DateGreaterThanIfExists', 'DateGreaterThanEqualsIfExists',
+                // Boolean and Binary
                 'Bool', 'BinaryEquals',
+                'BoolIfExists', 'BinaryEqualsIfExists',
+                // IP Address operators
                 'IpAddress', 'NotIpAddress',
+                'IpAddressIfExists', 'NotIpAddressIfExists',
+                // ARN operators
                 'ArnEquals', 'ArnLike', 'ArnNotEquals', 'ArnNotLike',
+                'ArnEqualsIfExists', 'ArnLikeIfExists', 'ArnNotEqualsIfExists', 'ArnNotLikeIfExists',
+                // Null check
                 'Null'
             ];
 
             Object.keys(condition).forEach(operator => {
-                if (!validConditionOperators.includes(operator)) {
+                // Handle ForAllValues: and ForAnyValue: prefixes (used for set operations)
+                let operatorToCheck = operator;
+                if (operator.startsWith('ForAllValues:') || operator.startsWith('ForAnyValue:')) {
+                    operatorToCheck = operator.split(':')[1];
+                }
+
+                if (!validConditionOperators.includes(operatorToCheck)) {
                     errors.push(`${prefix}: Unknown condition operator "${operator}"`);
                 }
 
