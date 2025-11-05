@@ -216,25 +216,20 @@ The built-in validator performs comprehensive checks to ensure your policy is va
 - ✓ Version must be "2012-10-17" or "2008-10-17"
 - ✓ Statement must be a non-empty array
 - ✓ Each statement must have `Effect` (Allow/Deny)
-- ✓ Each statement must have `Principal` or `NotPrincipal`
 - ✓ Each statement must have `Action` or `NotAction`
 - ✓ Each statement must have `Resource` or `NotResource`
 - ✓ Effect must be exactly "Allow" or "Deny"
-- ✓ Principal format validation (ARN structure)
 - ✓ Action format validation (service:action)
 - ✓ Resource ARN format (must start with `arn:aws:s3:::`)
 - ✓ Bucket name length and format
 - ✓ Condition operators must be valid IAM operators
-- ✓ No duplicate Principal/NotPrincipal, Action/NotAction, or Resource/NotResource
 - ✓ Sid must be alphanumeric only
-- ✓ Account IDs must be 12 digits
 
 **Warnings (best practices):**
 - ⚠️ Using deprecated Version "2008-10-17"
-- ⚠️ Wildcard (*) principal grants public access
+- ⚠️ Principal field present (not supported by Impossible Cloud - will be ignored)
 - ⚠️ Non-S3 actions in S3 bucket policy
 - ⚠️ Unknown S3 actions
-- ⚠️ Service principals should end with .amazonaws.com
 - ⚠️ Unknown or custom fields in policy
 
 **Example Validation Output:**
@@ -246,7 +241,7 @@ The built-in validator performs comprehensive checks to ensure your policy is va
 Or with warnings:
 ```
 ⚠️ Policy is valid but has warnings:
-• Principal: Using wildcard (*) grants public access - ensure this is intentional
+• Statement[0]: Principal field is not supported by Impossible Cloud and will be ignored
 • Version "2008-10-17" is deprecated. Use "2012-10-17"
 ```
 
@@ -263,26 +258,28 @@ Or with warnings:
 
 ⚠️ **Important Security Notes:**
 
-- **Avoid Public Access**: Only use `*` as principal when you specifically need public access
 - **Least Privilege**: Grant only the minimum permissions required
 - **Use Conditions**: Add conditions to restrict access by IP, time, or other factors
 - **Regular Review**: Periodically review and update your bucket policies
+- **IAM Access Control**: Manage access through Impossible Cloud IAM policies and access keys
 - **Enable Encryption**: Consider adding conditions that require encrypted uploads
-- **Block Public Access**: Use S3 Block Public Access settings alongside policies
 
 ## Applying the Generated Policy
 
-1. Log in to AWS Console
-2. Navigate to S3 service
-3. Select your bucket
-4. Go to "Permissions" tab
-5. Click "Bucket Policy"
-6. Paste your generated policy
-7. Click "Save changes"
+### Using Impossible Cloud Console
 
-Alternatively, use AWS CLI:
+1. Log in to Impossible Cloud Console
+2. Navigate to your storage buckets
+3. Select your bucket
+4. Go to "Permissions" or "Bucket Policy" section
+5. Paste your generated policy
+6. Save changes
+
+### Using AWS CLI (S3-Compatible)
+
+Configure your AWS CLI to use Impossible Cloud endpoints, then:
 ```bash
-aws s3api put-bucket-policy --bucket YOUR-BUCKET-NAME --policy file://bucket-policy.json
+aws s3api put-bucket-policy --bucket YOUR-BUCKET-NAME --policy file://bucket-policy.json --endpoint-url https://your-impossible-cloud-endpoint
 ```
 
 ## Deployment
