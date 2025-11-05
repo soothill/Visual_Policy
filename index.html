@@ -107,6 +107,38 @@
             font-size: 0.85em;
         }
 
+        .validation-message {
+            display: none;
+            margin-top: 5px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .validation-message.error {
+            display: block;
+            background: #fee;
+            border-left: 3px solid #dc3545;
+            color: #dc3545;
+        }
+
+        .validation-message.success {
+            display: block;
+            background: #efe;
+            border-left: 3px solid #28a745;
+            color: #28a745;
+        }
+
+        input.invalid {
+            border-color: #dc3545 !important;
+            background-color: #fff5f5;
+        }
+
+        input.valid {
+            border-color: #28a745 !important;
+        }
+
         .checkbox-group {
             display: flex;
             align-items: center;
@@ -340,7 +372,8 @@
                 <div class="form-group">
                     <label for="bucketName">S3 Bucket Name *</label>
                     <input type="text" id="bucketName" placeholder="my-example-bucket" required>
-                    <small>Enter the name of your S3 bucket</small>
+                    <small>Enter the name of your S3 bucket (3-63 characters, lowercase letters, numbers, dots, and hyphens)</small>
+                    <div id="bucketNameValidation" class="validation-message"></div>
                 </div>
 
                 <div class="form-group">
@@ -355,7 +388,8 @@
                 <div class="form-group">
                     <label for="principal">Principal</label>
                     <input type="text" id="principal" placeholder='* or arn:aws:iam::123456789012:user/username'>
-                    <small>AWS account, IAM user, or * for public access</small>
+                    <small>AWS account, IAM user, service principal, or * for public access</small>
+                    <div id="principalValidation" class="validation-message"></div>
                 </div>
 
                 <div class="form-group">
@@ -423,6 +457,245 @@ Click "Generate Policy" to create your bucket policy...</div>
     <script>
         let currentPolicy = null;
 
+        // AWS S3 Bucket Name Validation
+        function validateBucketName(bucketName) {
+            const errors = [];
+
+            // Rule 1: Length must be between 3 and 63 characters
+            if (bucketName.length < 3) {
+                errors.push('Bucket name must be at least 3 characters long');
+            }
+            if (bucketName.length > 63) {
+                errors.push('Bucket name cannot exceed 63 characters');
+            }
+
+            // Rule 2: Can only contain lowercase letters, numbers, dots (.), and hyphens (-)
+            if (!/^[a-z0-9.-]+$/.test(bucketName)) {
+                errors.push('Bucket name can only contain lowercase letters, numbers, dots (.), and hyphens (-)');
+            }
+
+            // Rule 3: Must begin and end with a letter or number
+            if (!/^[a-z0-9]/.test(bucketName)) {
+                errors.push('Bucket name must begin with a lowercase letter or number');
+            }
+            if (!/[a-z0-9]$/.test(bucketName)) {
+                errors.push('Bucket name must end with a lowercase letter or number');
+            }
+
+            // Rule 4: Must not be formatted as an IP address
+            if (/^(\d{1,3}\.){3}\d{1,3}$/.test(bucketName)) {
+                errors.push('Bucket name cannot be formatted as an IP address (e.g., 192.168.1.1)');
+            }
+
+            // Rule 5: Must not start with 'xn--'
+            if (bucketName.startsWith('xn--')) {
+                errors.push('Bucket name cannot start with "xn--"');
+            }
+
+            // Rule 6: Must not end with '-s3alias'
+            if (bucketName.endsWith('-s3alias')) {
+                errors.push('Bucket name cannot end with "-s3alias"');
+            }
+
+            // Rule 7: Cannot contain two adjacent periods
+            if (bucketName.includes('..')) {
+                errors.push('Bucket name cannot contain two adjacent periods (..)');
+            }
+
+            // Rule 8: Cannot have a period adjacent to a hyphen
+            if (bucketName.includes('.-') || bucketName.includes('-.')) {
+                errors.push('Bucket name cannot have a period adjacent to a hyphen');
+            }
+
+            // Rule 9: Check for uppercase letters (already covered by regex but good to be explicit)
+            if (/[A-Z]/.test(bucketName)) {
+                errors.push('Bucket name cannot contain uppercase letters');
+            }
+
+            // Rule 10: Check for underscores
+            if (bucketName.includes('_')) {
+                errors.push('Bucket name cannot contain underscores (_)');
+            }
+
+            return {
+                isValid: errors.length === 0,
+                errors: errors
+            };
+        }
+
+        function updateBucketNameValidation() {
+            const bucketNameInput = document.getElementById('bucketName');
+            const validationDiv = document.getElementById('bucketNameValidation');
+            const bucketName = bucketNameInput.value.trim();
+
+            // Clear previous validation state
+            bucketNameInput.classList.remove('valid', 'invalid');
+            validationDiv.className = 'validation-message';
+            validationDiv.textContent = '';
+
+            // Don't validate if empty (will be caught by required field validation)
+            if (!bucketName) {
+                return { isValid: false, errors: ['Bucket name is required'] };
+            }
+
+            const validation = validateBucketName(bucketName);
+
+            if (validation.isValid) {
+                bucketNameInput.classList.add('valid');
+                validationDiv.className = 'validation-message success';
+                validationDiv.textContent = '✓ Valid bucket name';
+            } else {
+                bucketNameInput.classList.add('invalid');
+                validationDiv.className = 'validation-message error';
+                validationDiv.innerHTML = '✗ ' + validation.errors.join('<br>✗ ');
+            }
+
+            return validation;
+        }
+
+        // AWS ARN (Amazon Resource Name) Validation for Principal field
+        function validatePrincipalARN(principal) {
+            const errors = [];
+            const warnings = [];
+
+            // Allow wildcard for public access
+            if (principal === '*') {
+                warnings.push('Using "*" grants public access - ensure this is intentional for security');
+                return { isValid: true, errors: [], warnings: warnings };
+            }
+
+            // Allow empty (optional field)
+            if (!principal || principal.trim() === '') {
+                return { isValid: true, errors: [], warnings: [] };
+            }
+
+            // Check for service principals (e.g., s3.amazonaws.com, cloudfront.amazonaws.com)
+            if (principal.includes('.amazonaws.com') || principal.includes('.amazon.com')) {
+                if (!principal.match(/^[a-z0-9-]+\.(amazonaws\.com|amazon\.com)$/)) {
+                    errors.push('Service principal format should be: service-name.amazonaws.com');
+                } else {
+                    return { isValid: true, errors: [], warnings: [] };
+                }
+            }
+
+            // Validate IAM ARN format
+            if (principal.startsWith('arn:')) {
+                // General ARN format: arn:partition:service:region:account-id:resource
+                const arnRegex = /^arn:(aws|aws-cn|aws-us-gov):([a-z0-9-]+):([a-z0-9-]*):([0-9]{12}|):(.+)$/;
+
+                if (!arnRegex.test(principal)) {
+                    errors.push('Invalid ARN format. Expected: arn:aws:service:region:account-id:resource');
+                } else {
+                    const parts = principal.split(':');
+                    const partition = parts[1];
+                    const service = parts[2];
+                    const region = parts[3];
+                    const accountId = parts[4];
+                    const resource = parts.slice(5).join(':');
+
+                    // Validate partition
+                    if (!['aws', 'aws-cn', 'aws-us-gov'].includes(partition)) {
+                        errors.push(`Invalid partition "${partition}". Must be: aws, aws-cn, or aws-us-gov`);
+                    }
+
+                    // Validate service (for S3 bucket policies, most common are IAM, S3, STS)
+                    const validServices = ['iam', 's3', 'sts', 'ec2', 'lambda', 'cloudfront', 'elasticloadbalancing', 'rds', 'dynamodb'];
+                    if (!validServices.includes(service)) {
+                        warnings.push(`Service "${service}" is unusual for S3 bucket policies. Common services: iam, s3, sts`);
+                    }
+
+                    // For IAM ARNs, validate account ID
+                    if (service === 'iam') {
+                        if (!accountId) {
+                            errors.push('IAM ARN requires a 12-digit account ID');
+                        } else if (!/^\d{12}$/.test(accountId)) {
+                            errors.push(`Account ID must be exactly 12 digits, got: ${accountId}`);
+                        }
+
+                        // Validate resource format
+                        if (!resource) {
+                            errors.push('IAM ARN requires a resource (e.g., user/username, role/rolename, or root)');
+                        } else {
+                            const validResourceTypes = ['user', 'role', 'group', 'instance-profile', 'root', 'federated-user', 'assumed-role'];
+                            const resourceType = resource.split('/')[0];
+
+                            if (resource !== 'root' && !resource.includes('/')) {
+                                errors.push('IAM resource must be "root" or include type/name (e.g., user/username)');
+                            } else if (resource !== 'root' && !validResourceTypes.includes(resourceType)) {
+                                warnings.push(`Resource type "${resourceType}" may not be valid. Common types: user, role, root`);
+                            }
+                        }
+
+                        // IAM ARNs should not have region
+                        if (region && region !== '') {
+                            warnings.push('IAM ARNs typically do not specify a region');
+                        }
+                    }
+
+                    // For S3 ARNs
+                    if (service === 's3') {
+                        if (accountId && accountId !== '') {
+                            warnings.push('S3 ARNs typically do not include account ID');
+                        }
+                        if (region && region !== '') {
+                            warnings.push('S3 ARNs typically do not specify a region');
+                        }
+                    }
+                }
+            } else if (!principal.includes('.')) {
+                // If it's not an ARN and not a service principal, it might be an account ID
+                if (/^\d{12}$/.test(principal)) {
+                    warnings.push('Using just an account ID. Consider using full ARN format: arn:aws:iam::123456789012:root');
+                } else {
+                    errors.push('Principal must be "*", a valid ARN (arn:aws:...), service principal (service.amazonaws.com), or 12-digit account ID');
+                }
+            }
+
+            return {
+                isValid: errors.length === 0,
+                errors: errors,
+                warnings: warnings
+            };
+        }
+
+        function updatePrincipalValidation() {
+            const principalInput = document.getElementById('principal');
+            const validationDiv = document.getElementById('principalValidation');
+            const principal = principalInput.value.trim();
+
+            // Clear previous validation state
+            principalInput.classList.remove('valid', 'invalid');
+            validationDiv.className = 'validation-message';
+            validationDiv.textContent = '';
+
+            // Don't validate if empty (optional field)
+            if (!principal) {
+                return { isValid: true, errors: [], warnings: [] };
+            }
+
+            const validation = validatePrincipalARN(principal);
+
+            if (validation.isValid && validation.warnings.length === 0) {
+                principalInput.classList.add('valid');
+                validationDiv.className = 'validation-message success';
+                validationDiv.textContent = '✓ Valid principal format';
+            } else if (validation.isValid && validation.warnings.length > 0) {
+                principalInput.classList.add('valid');
+                validationDiv.className = 'validation-message';
+                validationDiv.style.display = 'block';
+                validationDiv.style.background = '#fff8e1';
+                validationDiv.style.borderLeft = '3px solid #ff9800';
+                validationDiv.style.color = '#f57c00';
+                validationDiv.innerHTML = '⚠ ' + validation.warnings.join('<br>⚠ ');
+            } else {
+                principalInput.classList.add('invalid');
+                validationDiv.className = 'validation-message error';
+                validationDiv.innerHTML = '✗ ' + validation.errors.join('<br>✗ ');
+            }
+
+            return validation;
+        }
+
         function loadTemplate(templateName) {
             const templates = {
                 publicRead: {
@@ -476,6 +749,10 @@ Click "Generate Policy" to create your bucket policy...</div>
                 if (checkbox) checkbox.checked = true;
             });
 
+            // Validate the loaded bucket name and principal
+            updateBucketNameValidation();
+            updatePrincipalValidation();
+
             showNotification(`Template loaded: ${templateName}`);
         }
 
@@ -486,8 +763,28 @@ Click "Generate Policy" to create your bucket policy...</div>
                 return;
             }
 
+            // Validate bucket name against AWS standards
+            const bucketValidation = validateBucketName(bucketName);
+            if (!bucketValidation.isValid) {
+                updateBucketNameValidation(); // Show validation errors
+                showNotification('Invalid bucket name. Please fix the errors shown below the bucket name field.', 'error');
+                // Scroll to bucket name field
+                document.getElementById('bucketName').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
             const effect = document.getElementById('policyEffect').value;
             const principal = document.getElementById('principal').value.trim() || '*';
+
+            // Validate principal ARN format
+            const principalValidation = validatePrincipalARN(principal);
+            if (!principalValidation.isValid) {
+                updatePrincipalValidation(); // Show validation errors
+                showNotification('Invalid principal format. Please fix the errors shown below the principal field.', 'error');
+                // Scroll to principal field
+                document.getElementById('principal').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
             const resourcePath = document.getElementById('resourcePath').value.trim() || '*';
             const customActions = document.getElementById('customActions').value.trim();
             const conditionText = document.getElementById('condition').value.trim();
@@ -937,6 +1234,52 @@ Click "Generate Policy" to create your bucket policy...</div>
         // Initialize with default empty policy
         window.onload = function() {
             console.log('AWS S3 Bucket Policy Generator loaded successfully');
+
+            // Add real-time validation for bucket name
+            const bucketNameInput = document.getElementById('bucketName');
+
+            // Validate on input (as user types)
+            bucketNameInput.addEventListener('input', function() {
+                // Only validate if there's some content
+                if (this.value.trim().length > 0) {
+                    updateBucketNameValidation();
+                } else {
+                    // Clear validation if empty
+                    this.classList.remove('valid', 'invalid');
+                    document.getElementById('bucketNameValidation').className = 'validation-message';
+                    document.getElementById('bucketNameValidation').textContent = '';
+                }
+            });
+
+            // Validate on blur (when user leaves the field)
+            bucketNameInput.addEventListener('blur', function() {
+                if (this.value.trim().length > 0) {
+                    updateBucketNameValidation();
+                }
+            });
+
+            // Add real-time validation for principal ARN
+            const principalInput = document.getElementById('principal');
+
+            // Validate on input (as user types)
+            principalInput.addEventListener('input', function() {
+                // Only validate if there's some content
+                if (this.value.trim().length > 0) {
+                    updatePrincipalValidation();
+                } else {
+                    // Clear validation if empty
+                    this.classList.remove('valid', 'invalid');
+                    document.getElementById('principalValidation').className = 'validation-message';
+                    document.getElementById('principalValidation').textContent = '';
+                }
+            });
+
+            // Validate on blur (when user leaves the field)
+            principalInput.addEventListener('blur', function() {
+                if (this.value.trim().length > 0) {
+                    updatePrincipalValidation();
+                }
+            });
         };
     </script>
 </body>
