@@ -14,6 +14,7 @@ A simple, user-friendly web-based utility for creating AWS S3 bucket policies. P
 
 - **Flexible Configuration**:
   - **Real-time bucket name validation** - Ensures compliance with AWS S3 naming standards
+  - **Real-time ARN validation** - Validates principal ARNs against AWS standards
   - Specify bucket name and resource paths
   - Choose Allow/Deny effects
   - Configure principals (IAM users, accounts, or public access)
@@ -137,6 +138,68 @@ The application validates bucket names in real-time as you type, ensuring they c
 **Examples:**
 - ✅ Valid: `my-bucket-name`, `example.bucket.123`, `prod-data-2024`
 - ❌ Invalid: `MyBucket` (uppercase), `my_bucket` (underscore), `my..bucket` (adjacent periods)
+
+### Principal ARN Validation
+
+The application validates principal ARNs (Amazon Resource Names) in real-time to ensure they comply with AWS ARN standards and are appropriate for S3 bucket policies.
+
+**Supported Principal Formats:**
+
+1. **Wildcard (Public Access)**
+   - `*` - Grants public access (shows security warning)
+
+2. **IAM User/Role ARNs**
+   - Format: `arn:aws:iam::123456789012:user/username`
+   - Format: `arn:aws:iam::123456789012:role/rolename`
+   - Format: `arn:aws:iam::123456789012:root` (entire account)
+
+3. **Service Principals**
+   - Format: `s3.amazonaws.com`
+   - Format: `cloudfront.amazonaws.com`
+   - Format: `ec2.amazonaws.com`
+
+4. **Account IDs**
+   - Format: `123456789012` (12 digits)
+
+**Validation Rules:**
+- ✓ ARN format: `arn:partition:service:region:account-id:resource`
+- ✓ Valid partitions: `aws`, `aws-cn`, `aws-us-gov`
+- ✓ Account ID must be exactly 12 digits
+- ✓ IAM ARNs require resource type (user, role, group, or root)
+- ✓ Service principals must end with `.amazonaws.com` or `.amazon.com`
+- ✓ Validates resource format for different service types
+
+**Visual Feedback:**
+- 🟢 Green border = Valid ARN format
+- 🔴 Red border = Invalid ARN format
+- 🟠 Orange warning = Valid but with warnings (e.g., public access, unusual service)
+- Specific error/warning messages shown below the input field
+
+**Examples:**
+
+Valid ARNs:
+```
+*
+arn:aws:iam::123456789012:user/alice
+arn:aws:iam::123456789012:role/S3AccessRole
+arn:aws:iam::123456789012:root
+s3.amazonaws.com
+cloudfront.amazonaws.com
+123456789012
+```
+
+Invalid ARNs:
+```
+arn:aws:iam::12345:user/alice           ✗ (account ID must be 12 digits)
+arn:aws:iam::123456789012:alice         ✗ (missing resource type)
+arn:invalid:iam::123456789012:user/bob  ✗ (invalid partition)
+service.example.com                     ✗ (must end with .amazonaws.com)
+```
+
+**Security Warnings:**
+- Using `*` triggers a warning about public access
+- Unusual services for S3 bucket policies trigger warnings
+- Just using an account ID suggests using full ARN format
 
 ### Advanced Features
 
