@@ -27,6 +27,10 @@ A simple, user-friendly web-based utility for creating AWS S3 bucket policies. P
   - JSON validation
   - Clear form functionality
 
+## Live Demo
+
+This application can be deployed to GitHub Pages for easy access. See the [Deployment](#deployment) section below.
+
 ## Getting Started
 
 ### Option 1: Open Directly in Browser
@@ -158,6 +162,48 @@ Alternatively, use AWS CLI:
 ```bash
 aws s3api put-bucket-policy --bucket YOUR-BUCKET-NAME --policy file://bucket-policy.json
 ```
+
+## Deployment
+
+### GitHub Pages (Recommended)
+
+This repository includes a GitHub Actions workflow for automatic deployment to GitHub Pages.
+
+#### Automatic Deployment (using GitHub Actions)
+
+1. **Enable GitHub Pages:**
+   - Go to your repository settings on GitHub
+   - Navigate to "Pages" in the left sidebar
+   - Under "Build and deployment", select "GitHub Actions" as the source
+
+2. **Merge to main branch:**
+   - Merge your changes to the `main` or `master` branch
+   - The GitHub Actions workflow will automatically deploy
+
+3. **Access your site:**
+   - Your site will be available at: `https://YOUR-USERNAME.github.io/Visual_Policy/`
+   - The URL will be shown in the GitHub Pages settings
+
+#### Manual GitHub Pages Setup
+
+If you prefer manual deployment:
+
+1. Go to repository Settings → Pages
+2. Under "Source", select "Deploy from a branch"
+3. Choose the branch containing your files (e.g., `main`)
+4. Select the root folder (`/`)
+5. Click "Save"
+
+Your site will be live at `https://YOUR-USERNAME.github.io/Visual_Policy/` within a few minutes.
+
+### Other Hosting Options
+
+Since this is a static site (single HTML file), you can deploy it to:
+
+- **Netlify**: Drag and drop the `index.html` file
+- **Vercel**: Import from GitHub repository
+- **AWS S3 + CloudFront**: Upload as a static website
+- **Any web server**: Just upload `index.html`
 
 ## Browser Compatibility
 
