@@ -1435,7 +1435,6 @@ Click "Generate Policy" to create your bucket policy...</div>
                 publicRead: {
                     bucketName: 'my-public-bucket',
                     effect: 'Allow',
-                    principal: '*',
                     actions: ['s3:GetObject'],
                     resourcePath: '*',
                     description: 'Public read access for all objects'
@@ -1443,7 +1442,6 @@ Click "Generate Policy" to create your bucket policy...</div>
                 privateReadWrite: {
                     bucketName: 'my-private-bucket',
                     effect: 'Allow',
-                    principal: 'arn:aws:iam::123456789012:user/YourUsername',
                     actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:ListBucket'],
                     resourcePath: '*',
                     description: 'Private read/write access for specific IAM user'
@@ -1451,7 +1449,6 @@ Click "Generate Policy" to create your bucket policy...</div>
                 crossAccount: {
                     bucketName: 'my-shared-bucket',
                     effect: 'Allow',
-                    principal: 'arn:aws:iam::ACCOUNT-ID-WITHOUT-HYPHENS:root',
                     actions: ['s3:GetObject', 's3:ListBucket'],
                     resourcePath: '*',
                     description: 'Cross-account access'
@@ -1463,7 +1460,7 @@ Click "Generate Policy" to create your bucket policy...</div>
 
             document.getElementById('bucketName').value = template.bucketName;
             document.getElementById('policyEffect').value = template.effect;
-            document.getElementById('principal').value = template.principal;
+            // Principal field not set - not supported by Impossible Cloud
             document.getElementById('resourcePath').value = template.resourcePath;
 
             // Clear all checkboxes first
@@ -1500,17 +1497,7 @@ Click "Generate Policy" to create your bucket policy...</div>
             }
 
             const effect = document.getElementById('policyEffect').value;
-            const principal = document.getElementById('principal').value.trim() || '*';
-
-            // Validate principal ARN format
-            const principalValidation = validatePrincipalARN(principal);
-            if (!principalValidation.isValid) {
-                updatePrincipalValidation(); // Show validation errors
-                showNotification('Invalid principal format. Please fix the errors shown below the principal field.', 'error');
-                // Scroll to principal field
-                document.getElementById('principal').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
+            // Principal field not used - not supported by Impossible Cloud
             const resourcePath = document.getElementById('resourcePath').value.trim() || '*';
             const customActions = document.getElementById('customActions').value.trim();
             const conditionText = document.getElementById('condition').value.trim();
@@ -1549,11 +1536,10 @@ Click "Generate Policy" to create your bucket policy...</div>
                 resources.push(`arn:aws:s3:::${bucketName}/*`);
             }
 
-            // Build statement
+            // Build statement (Principal omitted - not supported by Impossible Cloud)
             const statement = {
                 Sid: "GeneratedPolicy" + Date.now(),
                 Effect: effect,
-                Principal: principal === '*' ? '*' : { AWS: principal },
                 Action: actions.length === 1 ? actions[0] : actions,
                 Resource: resources.length === 1 ? resources[0] : resources
             };
