@@ -14,7 +14,7 @@ A simple, user-friendly web-based utility for creating AWS S3 bucket policies. P
 
 - **Flexible Configuration**:
   - **Real-time bucket name validation** - Ensures compliance with AWS S3 naming standards
-  - **Real-time ARN validation** - Validates principal ARNs against AWS standards
+  - **Progressive ARN suggestions** - Step-by-step guidance while typing ARNs, not just error messages
   - Specify bucket name and resource paths
   - Choose Allow/Deny effects
   - Configure principals (IAM users, accounts, or public access)
@@ -141,7 +141,7 @@ The application validates bucket names in real-time as you type, ensuring they c
 
 ### Principal ARN Validation
 
-The application validates principal ARNs (Amazon Resource Names) in real-time to ensure they comply with AWS ARN standards and are appropriate for S3 bucket policies.
+The application provides **progressive, helpful suggestions** as you type ARNs, guiding you through each field step-by-step rather than just showing errors. This makes it easy to construct valid ARNs even if you're unfamiliar with the format.
 
 **Supported Principal Formats:**
 
@@ -169,11 +169,25 @@ The application validates principal ARNs (Amazon Resource Names) in real-time to
 - ✓ Service principals must end with `.amazonaws.com` or `.amazon.com`
 - ✓ Validates resource format for different service types
 
+**Progressive Suggestions:**
+
+As you type, the system guides you through each part of the ARN:
+
+1. **Starting out**: "💡 Start typing: `*` for public, `arn:aws:iam::` for IAM..."
+2. **After `arn:`**: "💡 Next: partition → `arn:aws:` (or `aws-cn`, `aws-us-gov`)"
+3. **After `arn:aws:`**: "💡 Next: service → `iam`, `s3`, or `sts` then `:`"
+4. **After `arn:aws:iam::`**: "💡 Next: 12-digit account ID → `123456789012` then `:`"
+5. **While typing account**: "💡 Account ID: 5/12 digits (7 more needed)"
+6. **After account ID**: "💡 Perfect! Now add `:` and resource (e.g., `user/username` or `root`)"
+7. **After `:`**: "💡 Next: resource → `user/username`, `role/rolename`, or `root`"
+8. **Complete**: "✓ Valid IAM user ARN"
+
 **Visual Feedback:**
+- 🔵 Blue hint box = Helpful suggestion for next step
 - 🟢 Green border = Valid ARN format
 - 🔴 Red border = Invalid ARN format
 - 🟠 Orange warning = Valid but with warnings (e.g., public access, unusual service)
-- Specific error/warning messages shown below the input field
+- Progress tracking for account IDs (e.g., "5/12 digits")
 
 **Examples:**
 

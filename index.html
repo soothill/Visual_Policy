@@ -130,6 +130,21 @@
             color: #28a745;
         }
 
+        .validation-message.hint {
+            display: block;
+            background: #e3f2fd;
+            border-left: 3px solid #2196F3;
+            color: #1565c0;
+        }
+
+        .validation-message.hint code {
+            background: #bbdefb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
         input.invalid {
             border-color: #dc3545 !important;
             background-color: #fff5f5;
@@ -658,6 +673,249 @@ Click "Generate Policy" to create your bucket policy...</div>
             };
         }
 
+        function getARNSuggestion(principal) {
+            // If empty, show options
+            if (!principal || principal.length === 0) {
+                return {
+                    type: 'hint',
+                    message: '💡 Start typing: <code>*</code> for public, <code>arn:aws:iam::</code> for IAM, or <code>service.amazonaws.com</code> for service principal'
+                };
+            }
+
+            // If they're typing an ARN
+            if (principal.startsWith('arn:') || principal.startsWith('arn') || principal.startsWith('ar') || principal.startsWith('a')) {
+                const parts = principal.split(':');
+
+                // Stage 1: Just started typing "arn"
+                if (parts.length === 1 && !principal.includes(':')) {
+                    if ('arn:'.startsWith(principal)) {
+                        return {
+                            type: 'hint',
+                            message: '💡 Continue typing: <code>arn:</code>'
+                        };
+                    }
+                }
+
+                // Stage 2: Typed "arn:"
+                if (parts.length === 1 && principal.endsWith(':')) {
+                    return {
+                        type: 'hint',
+                        message: '💡 Next: partition → <code>arn:aws:</code> (or <code>aws-cn</code>, <code>aws-us-gov</code>)'
+                    };
+                }
+
+                // Stage 3: Typing partition
+                if (parts.length === 2 && !principal.endsWith(':')) {
+                    const partition = parts[1];
+                    if (partition === 'aws' || partition === 'aws-cn' || partition === 'aws-us-gov') {
+                        return {
+                            type: 'hint',
+                            message: `💡 Good! Now add colon and service: <code>arn:${partition}:</code>`
+                        };
+                    } else if ('aws'.startsWith(partition) || 'aws-cn'.startsWith(partition) || 'aws-us-gov'.startsWith(partition)) {
+                        return {
+                            type: 'hint',
+                            message: '💡 Continue: <code>aws</code>, <code>aws-cn</code>, or <code>aws-us-gov</code>'
+                        };
+                    }
+                }
+
+                // Stage 4: Typed partition, now need service
+                if (parts.length === 2 && principal.endsWith(':')) {
+                    return {
+                        type: 'hint',
+                        message: '💡 Next: service → <code>iam</code>, <code>s3</code>, or <code>sts</code> then <code>:</code>'
+                    };
+                }
+
+                // Stage 5: Typing service
+                if (parts.length === 3 && !principal.endsWith(':')) {
+                    const service = parts[2];
+                    if (['iam', 's3', 'sts', 'ec2', 'lambda'].includes(service)) {
+                        return {
+                            type: 'hint',
+                            message: `💡 Good! Now add colon and region: <code>arn:${parts[1]}:${service}:</code> (usually empty for IAM/S3)`
+                        };
+                    } else if ('iam'.startsWith(service) || 's3'.startsWith(service) || 'sts'.startsWith(service)) {
+                        return {
+                            type: 'hint',
+                            message: '💡 Common services: <code>iam</code>, <code>s3</code>, <code>sts</code>'
+                        };
+                    }
+                }
+
+                // Stage 6: Typed service, now need region (usually empty)
+                if (parts.length === 3 && principal.endsWith(':')) {
+                    return {
+                        type: 'hint',
+                        message: '💡 Next: region (usually empty for IAM/S3) → <code>:</code> then account ID'
+                    };
+                }
+
+                // Stage 7: Typing region (usually skipped)
+                if (parts.length === 4 && !principal.endsWith(':')) {
+                    return {
+                        type: 'hint',
+                        message: '💡 Most IAM/S3 ARNs leave region empty. Add <code>:</code> for account ID'
+                    };
+                }
+
+                // Stage 8: Need account ID
+                if (parts.length === 4 && principal.endsWith(':')) {
+                    return {
+                        type: 'hint',
+                        message: '💡 Next: 12-digit account ID → <code>123456789012</code> then <code>:</code>'
+                    };
+                }
+
+                // Stage 9: Typing account ID
+                if (parts.length === 5 && !principal.endsWith(':')) {
+                    const accountId = parts[4];
+                    const service = parts[2];
+
+                    if (accountId.length === 0) {
+                        return {
+                            type: 'hint',
+                            message: '💡 Enter your 12-digit AWS account ID'
+                        };
+                    } else if (!/^\d+$/.test(accountId)) {
+                        return {
+                            type: 'error',
+                            message: '✗ Account ID must contain only digits'
+                        };
+                    } else if (accountId.length < 12) {
+                        const remaining = 12 - accountId.length;
+                        return {
+                            type: 'hint',
+                            message: `💡 Account ID: ${accountId.length}/12 digits (${remaining} more needed)`
+                        };
+                    } else if (accountId.length === 12) {
+                        return {
+                            type: 'hint',
+                            message: `💡 Perfect! Now add <code>:</code> and resource (e.g., <code>user/username</code> or <code>root</code>)`
+                        };
+                    } else {
+                        return {
+                            type: 'error',
+                            message: '✗ Account ID must be exactly 12 digits'
+                        };
+                    }
+                }
+
+                // Stage 10: Need resource
+                if (parts.length === 5 && principal.endsWith(':')) {
+                    const service = parts[2];
+                    if (service === 'iam') {
+                        return {
+                            type: 'hint',
+                            message: '💡 Next: resource → <code>user/username</code>, <code>role/rolename</code>, or <code>root</code>'
+                        };
+                    } else {
+                        return {
+                            type: 'hint',
+                            message: '💡 Next: resource identifier'
+                        };
+                    }
+                }
+
+                // Stage 11: Typing resource
+                if (parts.length >= 6) {
+                    const service = parts[2];
+                    const resource = parts.slice(5).join(':');
+
+                    if (service === 'iam') {
+                        if (resource === 'root') {
+                            return {
+                                type: 'success',
+                                message: '✓ Complete! This grants access to the entire AWS account'
+                            };
+                        } else if (resource.includes('/')) {
+                            const resourceParts = resource.split('/');
+                            const resourceType = resourceParts[0];
+                            const resourceName = resourceParts[1];
+
+                            if (['user', 'role', 'group'].includes(resourceType)) {
+                                if (resourceName && resourceName.length > 0) {
+                                    return {
+                                        type: 'success',
+                                        message: `✓ Valid IAM ${resourceType} ARN`
+                                    };
+                                } else {
+                                    return {
+                                        type: 'hint',
+                                        message: `💡 Add the ${resourceType} name after the slash`
+                                    };
+                                }
+                            } else if ('user'.startsWith(resourceType) || 'role'.startsWith(resourceType) || 'group'.startsWith(resourceType)) {
+                                return {
+                                    type: 'hint',
+                                    message: '💡 Common types: <code>user/</code>, <code>role/</code>, <code>group/</code>'
+                                };
+                            }
+                        } else if ('user'.startsWith(resource) || 'role'.startsWith(resource) || 'group'.startsWith(resource) || 'root'.startsWith(resource)) {
+                            return {
+                                type: 'hint',
+                                message: '💡 Continue: <code>user/name</code>, <code>role/name</code>, <code>group/name</code>, or <code>root</code>'
+                            };
+                        }
+                    }
+                }
+            }
+
+            // Check for service principals
+            if (principal.includes('.') || principal.includes('amazonaws')) {
+                if (principal.endsWith('.amazonaws.com') || principal.endsWith('.amazon.com')) {
+                    return {
+                        type: 'success',
+                        message: '✓ Valid service principal'
+                    };
+                } else if ('s3.amazonaws.com'.startsWith(principal) ||
+                           'cloudfront.amazonaws.com'.startsWith(principal) ||
+                           'ec2.amazonaws.com'.startsWith(principal)) {
+                    return {
+                        type: 'hint',
+                        message: '💡 Common: <code>s3.amazonaws.com</code>, <code>cloudfront.amazonaws.com</code>, <code>ec2.amazonaws.com</code>'
+                    };
+                } else if (principal.includes('amazonaws')) {
+                    return {
+                        type: 'hint',
+                        message: '💡 Service principal format: <code>service-name.amazonaws.com</code>'
+                    };
+                }
+            }
+
+            // Check for wildcard
+            if (principal === '*') {
+                return {
+                    type: 'warning',
+                    message: '⚠ Wildcard grants public access - ensure this is intentional'
+                };
+            }
+
+            // Check for account ID only
+            if (/^\d+$/.test(principal)) {
+                if (principal.length < 12) {
+                    return {
+                        type: 'hint',
+                        message: `💡 Account ID: ${principal.length}/12 digits (${12 - principal.length} more needed)`
+                    };
+                } else if (principal.length === 12) {
+                    return {
+                        type: 'warning',
+                        message: '⚠ Valid account ID. Consider using full ARN: <code>arn:aws:iam::' + principal + ':root</code>'
+                    };
+                } else {
+                    return {
+                        type: 'error',
+                        message: '✗ Account ID must be exactly 12 digits'
+                    };
+                }
+            }
+
+            // Fall back to full validation for complete/invalid entries
+            return null;
+        }
+
         function updatePrincipalValidation() {
             const principalInput = document.getElementById('principal');
             const validationDiv = document.getElementById('principalValidation');
@@ -670,9 +928,42 @@ Click "Generate Policy" to create your bucket policy...</div>
 
             // Don't validate if empty (optional field)
             if (!principal) {
+                validationDiv.className = 'validation-message hint';
+                validationDiv.innerHTML = '💡 Optional: Use <code>*</code> for public access, or enter an ARN';
                 return { isValid: true, errors: [], warnings: [] };
             }
 
+            // Try progressive suggestion first
+            const suggestion = getARNSuggestion(principal);
+
+            if (suggestion) {
+                if (suggestion.type === 'success') {
+                    principalInput.classList.add('valid');
+                    validationDiv.className = 'validation-message success';
+                    validationDiv.innerHTML = suggestion.message;
+                    return { isValid: true, errors: [], warnings: [] };
+                } else if (suggestion.type === 'hint') {
+                    validationDiv.className = 'validation-message hint';
+                    validationDiv.innerHTML = suggestion.message;
+                    return { isValid: false, errors: [], warnings: [] };
+                } else if (suggestion.type === 'warning') {
+                    principalInput.classList.add('valid');
+                    validationDiv.className = 'validation-message';
+                    validationDiv.style.display = 'block';
+                    validationDiv.style.background = '#fff8e1';
+                    validationDiv.style.borderLeft = '3px solid #ff9800';
+                    validationDiv.style.color = '#f57c00';
+                    validationDiv.innerHTML = suggestion.message;
+                    return { isValid: true, errors: [], warnings: [suggestion.message] };
+                } else if (suggestion.type === 'error') {
+                    principalInput.classList.add('invalid');
+                    validationDiv.className = 'validation-message error';
+                    validationDiv.innerHTML = suggestion.message;
+                    return { isValid: false, errors: [suggestion.message], warnings: [] };
+                }
+            }
+
+            // Fall back to full validation for complete entries
             const validation = validatePrincipalARN(principal);
 
             if (validation.isValid && validation.warnings.length === 0) {
