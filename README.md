@@ -1,6 +1,6 @@
-# AWS S3 Bucket Policy Generator
+# Impossible Cloud Bucket Policy Generator
 
-A simple, user-friendly web-based utility for creating AWS S3 bucket policies. Perfect for new AWS customers who need to quickly generate secure and compliant bucket policies.
+A simple, user-friendly web-based utility for creating S3 bucket policies for Impossible Cloud. Perfect for new Impossible Cloud customers who need to quickly generate secure and compliant bucket policies. All S3 actions are compatible with Impossible Cloud's S3 API, and the tool also supports AWS S3 for cross-platform compatibility.
 
 ## Features
 
@@ -15,7 +15,7 @@ A simple, user-friendly web-based utility for creating AWS S3 bucket policies. P
 - **Flexible Configuration**:
   - **Real-time bucket name validation** - Ensures compliance with AWS S3 naming standards
   - **Progressive ARN suggestions** - Step-by-step guidance while typing ARNs, not just error messages
-  - **Comprehensive S3 actions** - 60+ S3 actions organized in 9 collapsible categories
+  - **Impossible Cloud compatible S3 actions** - 35+ S3 actions organized in 8 collapsible categories, all compatible with Impossible Cloud
   - Specify bucket name and resource paths
   - Choose Allow/Deny effects
   - Configure principals (IAM users, accounts, or public access)
@@ -148,39 +148,59 @@ The application provides **progressive, helpful suggestions** as you type ARNs, 
 1. **Wildcard (Public Access)**
    - `*` - Grants public access (shows security warning)
 
-2. **IAM User/Role ARNs**
+2. **AWS IAM User/Role ARNs**
    - Format: `arn:aws:iam::123456789012:user/username`
    - Format: `arn:aws:iam::123456789012:role/rolename`
    - Format: `arn:aws:iam::123456789012:root` (entire account)
 
-3. **Service Principals**
+3. **Impossible Cloud IAM ARNs**
+   - Format: `arn:ipcld:iam::YourCanonicalID:user/username`
+   - Format: `arn:ipcld:iam::YourCanonicalID:policy/policyname`
+
+4. **Canonical User IDs**
+   - Format: 64-character hexadecimal string
+   - Example: `79a59df900b949e55d96a1e698fbacedfd6e09d98eacf8f8d5218e7cd47ef2be`
+   - Used by Impossible Cloud and S3-compatible services
+
+5. **Service Principals**
    - Format: `s3.amazonaws.com`
    - Format: `cloudfront.amazonaws.com`
-   - Format: `ec2.amazonaws.com`
+   - ⚠ Note: AWS service principals may not be supported by Impossible Cloud
 
-4. **Account IDs**
+6. **Account IDs**
    - Format: `123456789012` (12 digits)
 
 **Validation Rules:**
-- ✓ ARN format: `arn:partition:service:region:account-id:resource`
-- ✓ Valid partitions: `aws`, `aws-cn`, `aws-us-gov`
-- ✓ Account ID must be exactly 12 digits
+- ✓ AWS ARN format: `arn:partition:service:region:account-id:resource`
+- ✓ Impossible Cloud ARN format: `arn:ipcld:iam::CanonicalID:resource`
+- ✓ Valid AWS partitions: `aws`, `aws-cn`, `aws-us-gov`
+- ✓ AWS account ID must be exactly 12 digits
 - ✓ IAM ARNs require resource type (user, role, group, or root)
+- ✓ Impossible Cloud ARNs require canonical ID and resource (user/name or policy/name)
 - ✓ Service principals must end with `.amazonaws.com` or `.amazon.com`
-- ✓ Validates resource format for different service types
+- ✓ Canonical user IDs must be 64-character hexadecimal strings
+- ⚠ Warns about AWS-specific services (ec2, lambda, cloudfront, etc.) not supported by Impossible Cloud
 
 **Progressive Suggestions:**
 
 As you type, the system guides you through each part of the ARN:
 
-1. **Starting out**: "💡 Start typing: `*` for public, `arn:aws:iam::` for IAM..."
-2. **After `arn:`**: "💡 Next: partition → `arn:aws:` (or `aws-cn`, `aws-us-gov`)"
+**For AWS ARNs:**
+1. **Starting out**: "💡 Start typing: `*` for public, `arn:aws:iam::` for AWS IAM, `arn:ipcld:iam::` for Impossible Cloud..."
+2. **After `arn:`**: "💡 Next: partition → `arn:aws:` for AWS, `arn:ipcld:` for Impossible Cloud"
 3. **After `arn:aws:`**: "💡 Next: service → `iam`, `s3`, or `sts` then `:`"
 4. **After `arn:aws:iam::`**: "💡 Next: 12-digit account ID → `123456789012` then `:`"
 5. **While typing account**: "💡 Account ID: 5/12 digits (7 more needed)"
 6. **After account ID**: "💡 Perfect! Now add `:` and resource (e.g., `user/username` or `root`)"
 7. **After `:`**: "💡 Next: resource → `user/username`, `role/rolename`, or `root`"
 8. **Complete**: "✓ Valid IAM user ARN"
+
+**For Impossible Cloud ARNs:**
+1. **After `arn:ipcld:`**: "💡 Next: service → `iam` (Impossible Cloud only supports IAM currently)"
+2. **After `arn:ipcld:iam::`**: "💡 Next: Your Impossible Cloud canonical ID then `:`"
+3. **While typing canonical ID**: "💡 Continue entering canonical ID, then add `:` for resource"
+4. **After canonical ID**: "💡 Next: resource → `user/username` or `policy/policyname`"
+5. **Complete**: "✓ Valid Impossible Cloud user ARN"
 
 **Visual Feedback:**
 - 🔵 Blue hint box = Helpful suggestion for next step
@@ -197,60 +217,63 @@ Valid ARNs:
 arn:aws:iam::123456789012:user/alice
 arn:aws:iam::123456789012:role/S3AccessRole
 arn:aws:iam::123456789012:root
-s3.amazonaws.com
-cloudfront.amazonaws.com
+arn:ipcld:iam::abc123def456:user/bob
+arn:ipcld:iam::xyz789ghi012:policy/my-policy
+79a59df900b949e55d96a1e698fbacedfd6e09d98eacf8f8d5218e7cd47ef2be (canonical ID)
+s3.amazonaws.com (⚠ warning: may not work with Impossible Cloud)
 123456789012
 ```
 
 Invalid ARNs:
 ```
-arn:aws:iam::12345:user/alice           ✗ (account ID must be 12 digits)
-arn:aws:iam::123456789012:alice         ✗ (missing resource type)
-arn:invalid:iam::123456789012:user/bob  ✗ (invalid partition)
-service.example.com                     ✗ (must end with .amazonaws.com)
+arn:aws:iam::12345:user/alice                ✗ (account ID must be 12 digits)
+arn:aws:iam::123456789012:alice              ✗ (missing resource type)
+arn:invalid:iam::123456789012:user/bob       ✗ (invalid partition)
+arn:ipcld:s3::canonical123:bucket/mybucket   ✗ (Impossible Cloud only supports IAM service)
+arn:ipcld:iam::canonical123:alice            ✗ (missing resource type)
+service.example.com                          ✗ (must end with .amazonaws.com)
 ```
 
-**Security Warnings:**
+**Security and Compatibility Warnings:**
 - Using `*` triggers a warning about public access
-- Unusual services for S3 bucket policies trigger warnings
+- AWS service principals (*.amazonaws.com) trigger warning about Impossible Cloud compatibility
+- AWS-specific services (ec2, lambda, cloudfront, etc.) trigger warnings
 - Just using an account ID suggests using full ARN format
 
-### S3 Actions Selection
+### S3 Actions Selection (Impossible Cloud Compatible)
 
-The application provides **60+ S3 actions** organized into 9 categories for easy selection. Click any category header to expand/collapse it.
+The application provides **35+ S3 actions** organized into 8 categories for easy selection. All actions are compatible with Impossible Cloud's S3 API. Click any category header to expand/collapse it.
 
 **Action Categories:**
 
-1. **📄 Object Operations** (6 actions)
-   - GetObject, PutObject, DeleteObject, GetObjectAttributes, GetObjectTorrent, RestoreObject
+1. **📄 Object Operations** (7 actions)
+   - GetObject, PutObject, DeleteObject, GetObjectAttributes, GetObjectTagging, PutObjectTagging, DeleteObjectTagging
 
 2. **🗂️ Bucket Operations** (6 actions)
    - ListBucket, ListBucketVersions, ListBucketMultipartUploads, GetBucketLocation, GetBucketVersioning, PutBucketVersioning
 
-3. **🔐 Access Control (ACL)** (9 actions)
-   - GetObjectAcl, PutObjectAcl, GetBucketAcl, PutBucketAcl, GetBucketPolicy, PutBucketPolicy, DeleteBucketPolicy, GetBucketPublicAccessBlock, PutBucketPublicAccessBlock
+3. **🔐 Bucket Policy & CORS** (6 actions)
+   - GetBucketPolicy, PutBucketPolicy, DeleteBucketPolicy, GetBucketCORS, PutBucketCORS, DeleteBucketCORS
 
-4. **🔄 Versioning** (5 actions)
-   - GetObjectVersion, DeleteObjectVersion, GetObjectVersionAcl, PutObjectVersionAcl, GetObjectVersionTorrent
+4. **🔄 Object Versioning** (6 actions)
+   - GetObjectVersion, DeleteObjectVersion, GetObjectVersionAttributes, GetObjectVersionTagging, PutObjectVersionTagging, DeleteObjectVersionTagging
 
 5. **📤 Multipart Upload** (2 actions)
    - AbortMultipartUpload, ListMultipartUploadParts
 
-6. **⚙️ Bucket Configuration** (15 actions)
-   - CORS, Website, Logging, Notification, Tagging, RequestPayment settings
+6. **🏷️ Bucket Tagging & Lifecycle** (5 actions)
+   - GetBucketTagging, PutBucketTagging, DeleteBucketTagging, GetLifecycleConfiguration, PutLifecycleConfiguration
 
-7. **♻️ Lifecycle & Replication** (4 actions)
-   - GetLifecycleConfiguration, PutLifecycleConfiguration, GetReplicationConfiguration, PutReplicationConfiguration
+7. **🔒 Object Lock & Compliance** (3 actions)
+   - GetObjectLockConfiguration, PutObjectLockConfiguration, BypassGovernanceRetention
 
-8. **🔒 Encryption & Security** (9 actions)
-   - Encryption configuration, Object Lock, Legal Hold, Retention policies
-
-9. **🚀 Advanced** (3 actions)
-   - Transfer Acceleration, s3:* (all actions)
+8. **🚀 Advanced** (1 action)
+   - s3:* (all S3 actions)
 
 **Usage Tips:**
 - Object Operations category is expanded by default for quick access to common actions
 - Other categories start collapsed to keep the interface clean
+- All actions are compatible with Impossible Cloud's S3 API
 - Select `s3:*` in the Advanced category to grant all S3 permissions
 - Use the "Additional Actions" textarea for any actions not in the list
 
