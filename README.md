@@ -22,6 +22,7 @@ A simple, user-friendly web-based utility for creating AWS S3 bucket policies. P
 
 - **Policy Management**:
   - Live JSON preview
+  - **Manual editing** - Click directly in the policy output to edit the JSON
   - Copy to clipboard
   - Download as JSON file
   - JSON validation
@@ -72,7 +73,21 @@ npx http-server
    - Check desired actions (GetObject, PutObject, etc.)
    - Specify resource path within the bucket
 4. **Generate Policy**: Click the "Generate Policy" button
-5. **Copy or Download**: Use the action buttons to copy or download your policy
+5. **Edit if Needed**: Click directly in the policy output to manually edit the JSON
+6. **Copy or Download**: Use the action buttons to copy or download your policy
+
+### Manual Editing
+
+After generating a policy, you can click directly in the policy output area to manually edit the JSON. This is useful for:
+- Fine-tuning specific values
+- Adding advanced conditions
+- Making quick adjustments without regenerating
+- Learning by experimenting with the policy structure
+
+**Tips:**
+- Click the "Validate JSON" button after editing to ensure your JSON is valid
+- Use proper JSON formatting (quotes, commas, brackets)
+- The Copy and Download buttons will use your edited version
 
 ### Examples
 
