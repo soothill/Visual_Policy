@@ -1207,12 +1207,12 @@ Click "Generate Policy" to create your bucket policy...</div>
                     if (partition === 'ipcld') {
                         return {
                             type: 'hint',
-                            message: '💡 Next: resource → <code>user/username</code> or <code>policy/policyname</code>'
+                            message: '💡 Next: resource → Examples: <code>user/alice</code>, <code>user/bob</code>, <code>policy/MyBucketPolicy</code>'
                         };
                     } else if (service === 'iam') {
                         return {
                             type: 'hint',
-                            message: '💡 Next: resource → <code>user/username</code>, <code>role/rolename</code>, or <code>root</code>'
+                            message: '💡 Next: resource → Examples: <code>user/alice</code>, <code>role/S3AccessRole</code>, <code>group/Developers</code>, or <code>root</code>'
                         };
                     } else {
                         return {
@@ -1241,9 +1241,12 @@ Click "Generate Policy" to create your bucket policy...</div>
                                         message: `✓ Valid Impossible Cloud ${resourceType} ARN`
                                     };
                                 } else {
+                                    const examples = resourceType === 'user'
+                                        ? '<code>user/alice</code> or <code>user/bob</code>'
+                                        : '<code>policy/MyBucketPolicy</code> or <code>policy/ReadOnlyAccess</code>';
                                     return {
                                         type: 'hint',
-                                        message: `💡 Add the ${resourceType} name after the slash`
+                                        message: `💡 Add the ${resourceType} name. Examples: ${examples}`
                                     };
                                 }
                             } else if ('user'.startsWith(resourceType) || 'policy'.startsWith(resourceType)) {
@@ -1255,7 +1258,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                         } else if ('user'.startsWith(resource) || 'policy'.startsWith(resource)) {
                             return {
                                 type: 'hint',
-                                message: '💡 Continue: <code>user/name</code> or <code>policy/name</code>'
+                                message: '💡 Continue typing: <code>user/alice</code>, <code>user/bob</code>, or <code>policy/MyBucketPolicy</code>'
                             };
                         }
                     } else if (service === 'iam') {
@@ -1276,9 +1279,14 @@ Click "Generate Policy" to create your bucket policy...</div>
                                         message: `✓ Valid IAM ${resourceType} ARN`
                                     };
                                 } else {
+                                    const examples = {
+                                        'user': '<code>user/alice</code>, <code>user/developers/john</code>',
+                                        'role': '<code>role/S3AccessRole</code>, <code>role/service-role/MyLambdaRole</code>',
+                                        'group': '<code>group/Developers</code>, <code>group/Admins</code>'
+                                    };
                                     return {
                                         type: 'hint',
-                                        message: `💡 Add the ${resourceType} name after the slash`
+                                        message: `💡 Add the ${resourceType} name. Examples: ${examples[resourceType]}`
                                     };
                                 }
                             } else if ('user'.startsWith(resourceType) || 'role'.startsWith(resourceType) || 'group'.startsWith(resourceType)) {
@@ -1290,7 +1298,7 @@ Click "Generate Policy" to create your bucket policy...</div>
                         } else if ('user'.startsWith(resource) || 'role'.startsWith(resource) || 'group'.startsWith(resource) || 'root'.startsWith(resource)) {
                             return {
                                 type: 'hint',
-                                message: '💡 Continue: <code>user/name</code>, <code>role/name</code>, <code>group/name</code>, or <code>root</code>'
+                                message: '💡 Continue typing: <code>user/alice</code>, <code>role/S3AccessRole</code>, <code>group/Developers</code>, or <code>root</code>'
                             };
                         }
                     }
