@@ -1,6 +1,6 @@
-# AWS S3 Bucket Policy Generator (Impossible Cloud Compatible)
+# Impossible Cloud Bucket Policy Generator
 
-A simple, user-friendly web-based utility for creating S3 bucket policies. Perfect for new AWS and Impossible Cloud customers who need to quickly generate secure and compliant bucket policies. All S3 actions are compatible with Impossible Cloud's S3 API.
+A simple, user-friendly web-based utility for creating S3 bucket policies for Impossible Cloud. Perfect for new Impossible Cloud customers who need to quickly generate secure and compliant bucket policies. All S3 actions are compatible with Impossible Cloud's S3 API, and the tool also supports AWS S3 for cross-platform compatibility.
 
 ## Features
 
