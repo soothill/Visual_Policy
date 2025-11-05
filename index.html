@@ -1707,18 +1707,14 @@ Click "Generate Policy" to create your bucket policy...</div>
                 errors.push(`${prefix}: Effect must be "Allow" or "Deny", got "${stmt.Effect}"`);
             }
 
-            // Validate Principal/NotPrincipal (one required for bucket policies)
-            if (!stmt.Principal && !stmt.NotPrincipal) {
-                errors.push(`${prefix}: Missing "Principal" or "NotPrincipal"`);
-            }
-            if (stmt.Principal && stmt.NotPrincipal) {
-                errors.push(`${prefix}: Cannot have both "Principal" and "NotPrincipal"`);
-            }
+            // Principal/NotPrincipal validation disabled - not supported by Impossible Cloud
+            // Impossible Cloud bucket policies work without explicit principals
+            // Access control is managed through IAM policies and access keys
             if (stmt.Principal) {
-                validatePrincipal(stmt.Principal, prefix, errors, warnings);
+                warnings.push(`${prefix}: Principal field is not supported by Impossible Cloud and will be ignored`);
             }
             if (stmt.NotPrincipal) {
-                validatePrincipal(stmt.NotPrincipal, prefix + '.NotPrincipal', errors, warnings);
+                warnings.push(`${prefix}: NotPrincipal field is not supported by Impossible Cloud and will be ignored`);
             }
 
             // Validate Action/NotAction (one required)
