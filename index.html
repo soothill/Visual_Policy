@@ -1433,21 +1433,18 @@ Click "Generate Policy" to create your bucket policy...</div>
         function loadTemplate(templateName) {
             const templates = {
                 publicRead: {
-                    bucketName: 'my-public-bucket',
                     effect: 'Allow',
                     actions: ['s3:GetObject'],
                     resourcePath: '*',
                     description: 'Public read access for all objects'
                 },
                 privateReadWrite: {
-                    bucketName: 'my-private-bucket',
                     effect: 'Allow',
                     actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:ListBucket'],
                     resourcePath: '*',
                     description: 'Private read/write access for specific IAM user'
                 },
                 crossAccount: {
-                    bucketName: 'my-shared-bucket',
                     effect: 'Allow',
                     actions: ['s3:GetObject', 's3:ListBucket'],
                     resourcePath: '*',
@@ -1458,7 +1455,7 @@ Click "Generate Policy" to create your bucket policy...</div>
             const template = templates[templateName];
             if (!template) return;
 
-            document.getElementById('bucketName').value = template.bucketName;
+            // Preserve user's bucket name - don't overwrite with template default
             document.getElementById('policyEffect').value = template.effect;
             // Principal field not set - not supported by Impossible Cloud
             document.getElementById('resourcePath').value = template.resourcePath;
