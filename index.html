@@ -450,6 +450,7 @@
                         <button class="template-btn" onclick="loadTemplate('publicRead')">Public Read Access</button>
                         <button class="template-btn" onclick="loadTemplate('privateReadWrite')">Private Read/Write</button>
                         <button class="template-btn" onclick="loadTemplate('crossAccount')">Cross-Account Access</button>
+                        <button class="template-btn" onclick="loadTemplate('objectLockVersioning')">Object Lock & Versioning</button>
                     </div>
                 </div>
 
@@ -1449,6 +1450,19 @@ Click "Generate Policy" to create your bucket policy...</div>
                     actions: ['s3:GetObject', 's3:ListBucket'],
                     resourcePath: '*',
                     description: 'Cross-account access'
+                },
+                objectLockVersioning: {
+                    effect: 'Allow',
+                    actions: [
+                        's3:GetObjectLockConfiguration',
+                        's3:PutObjectLockConfiguration',
+                        's3:BypassGovernanceRetention',
+                        's3:GetBucketVersioning',
+                        's3:PutBucketVersioning',
+                        's3:ListBucketVersions'
+                    ],
+                    resourcePath: '*',
+                    description: 'Enable object lock and versioning configuration for bucket'
                 }
             };
 
