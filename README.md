@@ -343,6 +343,10 @@ This is a simple single-file application. To modify:
 
 This project is open source and available for free use.
 
+## Copyright
+
+Copyright (c) 2025 Darren Soothill. All rights reserved.
+
 ## Support
 
 For issues or questions:
