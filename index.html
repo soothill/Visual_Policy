@@ -1498,6 +1498,19 @@ Click "Generate Policy" to create your bucket policy...</div>
                 if (checkbox) checkbox.checked = true;
             });
 
+            // Expand categories that have checked checkboxes
+            const checkedCheckboxes = document.querySelectorAll('input[type="checkbox"]:checked.s3-action');
+            const categoriesToExpand = new Set();
+            checkedCheckboxes.forEach(checkbox => {
+                const category = checkbox.closest('.action-category');
+                if (category && category.classList.contains('collapsed')) {
+                    categoriesToExpand.add(category);
+                }
+            });
+            categoriesToExpand.forEach(category => {
+                category.classList.remove('collapsed');
+            });
+
             // Validate the loaded bucket name and principal
             updateBucketNameValidation();
             updatePrincipalValidation();
