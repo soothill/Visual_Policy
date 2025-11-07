@@ -1273,8 +1273,6 @@ function showNotification(message, type = 'success') {
 
 // Initialize with default empty policy
 window.onload = function() {
-    console.log('Impossible Cloud Bucket Policy Generator loaded successfully');
-
     // Add real-time validation for bucket name
     const bucketNameInput = document.getElementById('bucketName');
 
