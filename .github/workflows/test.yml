@@ -32,6 +32,8 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
         continue-on-error: false
+        env:
+          CI: true
 
       - name: Run smoke tests
         run: npm run test:smoke
@@ -97,8 +99,12 @@ jobs:
     steps:
       - name: Check test results
         run: |
+          echo "Test job result: ${{ needs.test.result }}"
+          echo "Test coverage job result: ${{ needs.test-coverage.result }}"
+
           if [ "${{ needs.test.result }}" != "success" ]; then
             echo "❌ Tests failed!"
             exit 1
           fi
+
           echo "✅ All tests passed!"
