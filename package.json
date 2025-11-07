@@ -1,0 +1,31 @@
+{
+  "name": "impossible-cloud-policy-generator",
+  "version": "1.0.0",
+  "description": "Impossible Cloud Bucket Policy Generator with comprehensive test suite",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testMatch='**/tests/unit/**/*.test.js'",
+    "test:e2e": "playwright test",
+    "test:unit:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --testMatch='**/tests/unit/**/*.test.js'",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --testMatch='**/tests/unit/**/*.test.js'",
+    "playwright:install": "playwright install --with-deps"
+  },
+  "keywords": [
+    "s3",
+    "bucket-policy",
+    "impossible-cloud",
+    "policy-generator"
+  ],
+  "author": "Darren Soothill",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/jest": "^29.5.11",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^23.0.0"
+  }
+}
