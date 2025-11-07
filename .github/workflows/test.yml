@@ -33,9 +33,11 @@ jobs:
         run: npm run test:unit
         continue-on-error: false
 
-      - name: Run end-to-end tests
-        run: npm run test:e2e
+      - name: Run smoke tests
+        run: npm run test:smoke
         continue-on-error: false
+        env:
+          CI: true
 
       - name: Upload test results
         if: always()

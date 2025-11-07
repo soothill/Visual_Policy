@@ -44,9 +44,10 @@ export function setupTestEnvironment() {
   // Load the policy-generator.js script
   const scriptContent = readFileSync('./policy-generator.js', 'utf-8');
 
-  // Execute script in the context
-  const scriptFn = new Function('window', 'document', scriptContent);
-  scriptFn(window, window.document);
+  // Create a script element and add it to the document
+  const scriptElement = window.document.createElement('script');
+  scriptElement.textContent = scriptContent;
+  window.document.head.appendChild(scriptElement);
 
   // Return the window object with all functions
   return window;

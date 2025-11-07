@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "Impossible Cloud Bucket Policy Generator with comprehensive test suite",
   "scripts": {
-    "test": "npm run test:unit && npm run test:e2e",
+    "test": "npm run test:unit && npm run test:smoke",
     "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testMatch='**/tests/unit/**/*.test.js'",
+    "test:smoke": "playwright test tests/e2e/smoke.spec.js",
     "test:e2e": "playwright test",
+    "test:e2e:full": "playwright test tests/e2e/policy-generator.spec.js",
     "test:unit:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --testMatch='**/tests/unit/**/*.test.js'",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",

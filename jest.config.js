@@ -3,6 +3,7 @@ export default {
   moduleFileExtensions: ['js', 'json'],
   transform: {},
   testMatch: ['**/tests/unit/**/*.test.js'],
+  setupFilesAfterEnv: ['<rootDir>/tests/unit/jest.setup.js'],
   collectCoverageFrom: [
     'policy-generator.js',
     '!**/node_modules/**',
