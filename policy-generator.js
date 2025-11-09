@@ -1541,4 +1541,66 @@ window.onload = function () {
       updatePrincipalValidation();
     }
   });
+
+  // Add keyboard shortcuts
+  document.addEventListener('keydown', function (event) {
+    // Ctrl/Cmd + S: Download policy
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      event.preventDefault();
+      if (currentPolicy) {
+        downloadPolicy();
+        showNotification('Policy downloaded! (Ctrl/Cmd+S)', 'success');
+      } else {
+        showNotification('Generate a policy first before downloading (Ctrl/Cmd+S)', 'warning');
+      }
+    }
+
+    // Ctrl/Cmd + V: Validate policy
+    if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
+      event.preventDefault();
+      if (currentPolicy) {
+        validatePolicy();
+      } else {
+        showNotification('Generate a policy first before validating (Ctrl/Cmd+V)', 'warning');
+      }
+    }
+
+    // Ctrl/Cmd + C: Copy policy (when not in input field)
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key === 'c' &&
+      !['INPUT', 'TEXTAREA'].includes(event.target.tagName)
+    ) {
+      if (currentPolicy) {
+        copyPolicy();
+      }
+    }
+
+    // Ctrl/Cmd + G: Generate policy
+    if ((event.ctrlKey || event.metaKey) && event.key === 'g') {
+      event.preventDefault();
+      generatePolicy();
+    }
+
+    // Ctrl/Cmd + K: Clear form
+    if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+      event.preventDefault();
+      clearForm();
+    }
+
+    // Show keyboard shortcuts help with Ctrl/Cmd + /
+    if ((event.ctrlKey || event.metaKey) && event.key === '/') {
+      event.preventDefault();
+      showNotification(
+        'Keyboard Shortcuts:\n' +
+          '• Ctrl/Cmd + G: Generate Policy\n' +
+          '• Ctrl/Cmd + S: Download Policy\n' +
+          '• Ctrl/Cmd + C: Copy Policy\n' +
+          '• Ctrl/Cmd + V: Validate Policy\n' +
+          '• Ctrl/Cmd + K: Clear Form\n' +
+          '• Ctrl/Cmd + /: Show This Help',
+        'success'
+      );
+    }
+  });
 };
