@@ -31,7 +31,7 @@ export function setupTestEnvironment() {
   const dom = new JSDOM(html, {
     url: 'http://localhost',
     runScripts: 'dangerously',
-    resources: 'usable'
+    resources: 'usable',
   });
 
   const { window } = dom;

@@ -103,7 +103,9 @@ test.describe('Policy Generator - Category Toggle', () => {
     await page.goto('/');
 
     // Find a collapsed category
-    const bucketOpsHeader = page.locator('.action-category:has-text("Bucket Operations") .category-header');
+    const bucketOpsHeader = page.locator(
+      '.action-category:has-text("Bucket Operations") .category-header'
+    );
     const bucketOpsCategory = page.locator('.action-category:has-text("Bucket Operations")');
 
     // Should be collapsed initially
@@ -372,7 +374,7 @@ test.describe('Policy Generator - Clear Form', () => {
     await page.locator('#resourcePath').fill('test/*');
 
     // Set up dialog handler
-    page.on('dialog', async dialog => {
+    page.on('dialog', async (dialog) => {
       expect(dialog.message()).toContain('clear');
       await dialog.accept();
     });
@@ -395,7 +397,7 @@ test.describe('Policy Generator - Clear Form', () => {
     await page.locator('#bucketName').fill('test-bucket');
 
     // Set up dialog handler to cancel
-    page.on('dialog', async dialog => {
+    page.on('dialog', async (dialog) => {
       await dialog.dismiss();
     });
 

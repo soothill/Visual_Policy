@@ -1,0 +1,28 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListBucketAccess",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::your-bucket-name",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": ["documents/*", "images/*"]
+        }
+      }
+    },
+    {
+      "Sid": "ReadWriteDocuments",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::your-bucket-name/documents/*"
+    },
+    {
+      "Sid": "ReadOnlyImages",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::your-bucket-name/images/*"
+    }
+  ]
+}

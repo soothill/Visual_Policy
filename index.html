@@ -1,330 +1,544 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
     Impossible Cloud Bucket Policy Generator
     Copyright (c) 2025 Darren Soothill. All rights reserved.
 -->
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>Impossible Cloud Bucket Policy Generator</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>🪣 Impossible Cloud Bucket Policy Generator</h1>
-            <p>Create secure and compliant S3 bucket policies with ease</p>
+      <div class="header">
+        <h1>🪣 Impossible Cloud Bucket Policy Generator</h1>
+        <p>Create secure and compliant S3 bucket policies with ease</p>
+      </div>
+
+      <div class="content">
+        <div class="form-section">
+          <h2>Policy Configuration</h2>
+
+          <div class="info-box">
+            <h4>Getting Started</h4>
+            <p>
+              Choose a template below or manually configure your policy. Fill in the required fields
+              and click "Generate Policy" to create your S3 bucket policy.
+            </p>
+          </div>
+
+          <div class="template-section">
+            <h3>Quick Templates</h3>
+            <div class="template-buttons">
+              <button class="template-btn" onclick="loadTemplate('publicRead')">
+                Public Read Access
+              </button>
+              <button class="template-btn" onclick="loadTemplate('privateReadWrite')">
+                Private Read/Write
+              </button>
+              <button class="template-btn" onclick="loadTemplate('crossAccount')">
+                Cross-Account Access
+              </button>
+              <button class="template-btn" onclick="loadTemplate('objectLockVersioning')">
+                Object Lock & Versioning
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="bucketName">S3 Bucket Name *</label>
+            <input type="text" id="bucketName" placeholder="my-example-bucket" required />
+            <small
+              >Enter the name of your S3 bucket (3-63 characters, lowercase letters, numbers, dots,
+              and hyphens)</small
+            >
+            <div id="bucketNameValidation" class="validation-message"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="policyEffect">Effect *</label>
+            <select id="policyEffect">
+              <option value="Allow">Allow</option>
+              <option value="Deny">Deny</option>
+            </select>
+            <small>Allow or Deny the specified actions</small>
+          </div>
+
+          <!-- Principal field hidden - not currently supported by Impossible Cloud -->
+          <div class="form-group" style="display: none">
+            <label for="principal">Principal</label>
+            <input
+              type="text"
+              id="principal"
+              placeholder="* or arn:aws:iam::123456789012:user/username"
+            />
+            <small>AWS account, IAM user, service principal, or * for public access</small>
+            <div id="principalValidation" class="validation-message"></div>
+          </div>
+
+          <div class="form-group">
+            <label>S3 Actions (Impossible Cloud Compatible)</label>
+            <small style="margin-bottom: 10px; display: block"
+              >Select permissions to grant. Click categories to expand/collapse. All actions are
+              compatible with Impossible Cloud.</small
+            >
+
+            <div class="actions-container">
+              <!-- Object Operations -->
+              <div class="action-category">
+                <div class="category-header" onclick="toggleCategory(this)">
+                  <h4>📄 Object Operations</h4>
+                  <span class="category-toggle">▼</span>
+                </div>
+                <div class="category-content">
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetObject"
+                      value="s3:GetObject"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetObject">GetObject (Read)</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_PutObject"
+                      value="s3:PutObject"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_PutObject">PutObject (Write)</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_DeleteObject"
+                      value="s3:DeleteObject"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_DeleteObject">DeleteObject</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetObjectAttributes"
+                      value="s3:GetObjectAttributes"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetObjectAttributes">GetObjectAttributes</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetObjectTagging"
+                      value="s3:GetObjectTagging"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetObjectTagging">GetObjectTagging</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_PutObjectTagging"
+                      value="s3:PutObjectTagging"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_PutObjectTagging">PutObjectTagging</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_DeleteObjectTagging"
+                      value="s3:DeleteObjectTagging"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_DeleteObjectTagging">DeleteObjectTagging</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bucket Operations -->
+              <div class="action-category collapsed">
+                <div class="category-header" onclick="toggleCategory(this)">
+                  <h4>🗂️ Bucket Operations</h4>
+                  <span class="category-toggle">▼</span>
+                </div>
+                <div class="category-content">
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_ListBucket"
+                      value="s3:ListBucket"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_ListBucket">ListBucket</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_ListBucketVersions"
+                      value="s3:ListBucketVersions"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_ListBucketVersions">ListBucketVersions</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_ListBucketMultipartUploads"
+                      value="s3:ListBucketMultipartUploads"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_ListBucketMultipartUploads"
+                      >ListBucketMultipartUploads</label
+                    >
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetBucketLocation"
+                      value="s3:GetBucketLocation"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetBucketLocation">GetBucketLocation</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetBucketVersioning"
+                      value="s3:GetBucketVersioning"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetBucketVersioning">GetBucketVersioning</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_PutBucketVersioning"
+                      value="s3:PutBucketVersioning"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_PutBucketVersioning">PutBucketVersioning</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bucket Policy & CORS -->
+              <div class="action-category collapsed">
+                <div class="category-header" onclick="toggleCategory(this)">
+                  <h4>🔐 Bucket Policy & CORS</h4>
+                  <span class="category-toggle">▼</span>
+                </div>
+                <div class="category-content">
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetBucketPolicy"
+                      value="s3:GetBucketPolicy"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetBucketPolicy">GetBucketPolicy</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_PutBucketPolicy"
+                      value="s3:PutBucketPolicy"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_PutBucketPolicy">PutBucketPolicy</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_DeleteBucketPolicy"
+                      value="s3:DeleteBucketPolicy"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_DeleteBucketPolicy">DeleteBucketPolicy</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetBucketCORS"
+                      value="s3:GetBucketCORS"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetBucketCORS">GetBucketCORS</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_PutBucketCORS"
+                      value="s3:PutBucketCORS"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_PutBucketCORS">PutBucketCORS</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_DeleteBucketCORS"
+                      value="s3:DeleteBucketCORS"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_DeleteBucketCORS">DeleteBucketCORS</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Versioning -->
+              <div class="action-category collapsed">
+                <div class="category-header" onclick="toggleCategory(this)">
+                  <h4>🔄 Object Versioning</h4>
+                  <span class="category-toggle">▼</span>
+                </div>
+                <div class="category-content">
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetObjectVersion"
+                      value="s3:GetObjectVersion"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetObjectVersion">GetObjectVersion</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_DeleteObjectVersion"
+                      value="s3:DeleteObjectVersion"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_DeleteObjectVersion">DeleteObjectVersion</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetObjectVersionAttributes"
+                      value="s3:GetObjectVersionAttributes"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetObjectVersionAttributes"
+                      >GetObjectVersionAttributes</label
+                    >
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetObjectVersionTagging"
+                      value="s3:GetObjectVersionTagging"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetObjectVersionTagging">GetObjectVersionTagging</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_PutObjectVersionTagging"
+                      value="s3:PutObjectVersionTagging"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_PutObjectVersionTagging">PutObjectVersionTagging</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_DeleteObjectVersionTagging"
+                      value="s3:DeleteObjectVersionTagging"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_DeleteObjectVersionTagging"
+                      >DeleteObjectVersionTagging</label
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Multipart Upload -->
+              <div class="action-category collapsed">
+                <div class="category-header" onclick="toggleCategory(this)">
+                  <h4>📤 Multipart Upload</h4>
+                  <span class="category-toggle">▼</span>
+                </div>
+                <div class="category-content">
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_AbortMultipartUpload"
+                      value="s3:AbortMultipartUpload"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_AbortMultipartUpload">AbortMultipartUpload</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_ListMultipartUploadParts"
+                      value="s3:ListMultipartUploadParts"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_ListMultipartUploadParts">ListMultipartUploadParts</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bucket Tagging -->
+              <div class="action-category collapsed">
+                <div class="category-header" onclick="toggleCategory(this)">
+                  <h4>🏷️ Bucket Tagging</h4>
+                  <span class="category-toggle">▼</span>
+                </div>
+                <div class="category-content">
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetBucketTagging"
+                      value="s3:GetBucketTagging"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetBucketTagging">GetBucketTagging</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_PutBucketTagging"
+                      value="s3:PutBucketTagging"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_PutBucketTagging">PutBucketTagging</label>
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_DeleteBucketTagging"
+                      value="s3:DeleteBucketTagging"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_DeleteBucketTagging">DeleteBucketTagging</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Object Lock (Immutable Storage) -->
+              <div class="action-category collapsed">
+                <div class="category-header" onclick="toggleCategory(this)">
+                  <h4>🔒 Object Lock & Compliance</h4>
+                  <span class="category-toggle">▼</span>
+                </div>
+                <div class="category-content">
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_GetObjectLockConfiguration"
+                      value="s3:GetObjectLockConfiguration"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_GetObjectLockConfiguration"
+                      >GetObjectLockConfiguration</label
+                    >
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_PutObjectLockConfiguration"
+                      value="s3:PutObjectLockConfiguration"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_PutObjectLockConfiguration"
+                      >PutObjectLockConfiguration</label
+                    >
+                  </div>
+                  <div class="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="action_s3_BypassGovernanceRetention"
+                      value="s3:BypassGovernanceRetention"
+                      class="s3-action"
+                    />
+                    <label for="action_s3_BypassGovernanceRetention"
+                      >BypassGovernanceRetention</label
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Advanced -->
+              <div class="action-category collapsed">
+                <div class="category-header" onclick="toggleCategory(this)">
+                  <h4>🚀 Advanced</h4>
+                  <span class="category-toggle">▼</span>
+                </div>
+                <div class="category-content">
+                  <div class="checkbox-group">
+                    <input type="checkbox" id="action_s3_All" value="s3:*" class="s3-action" />
+                    <label for="action_s3_All"><strong>s3:* (All S3 Actions)</strong></label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="customActions">Additional Actions (Optional)</label>
+            <textarea
+              id="customActions"
+              placeholder="s3:GetBucketLocation&#10;s3:PutObjectAcl"
+            ></textarea>
+            <small>One action per line</small>
+          </div>
+
+          <div class="form-group">
+            <label for="resourcePath">Resource Path</label>
+            <input type="text" id="resourcePath" placeholder="* or folder/* or specific-file.txt" />
+            <small>Specify path within bucket (use * for all objects)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="condition">Condition (Optional - JSON)</label>
+            <textarea
+              id="condition"
+              placeholder='{"StringLike": {"s3:prefix": ["documents/*"]}}'
+            ></textarea>
+            <small>Advanced: Add IAM policy conditions in JSON format</small>
+          </div>
+
+          <button class="generate-btn" onclick="generatePolicy()">🚀 Generate Policy</button>
         </div>
 
-        <div class="content">
-            <div class="form-section">
-                <h2>Policy Configuration</h2>
-
-                <div class="info-box">
-                    <h4>Getting Started</h4>
-                    <p>Choose a template below or manually configure your policy. Fill in the required fields and click "Generate Policy" to create your S3 bucket policy.</p>
-                </div>
-
-                <div class="template-section">
-                    <h3>Quick Templates</h3>
-                    <div class="template-buttons">
-                        <button class="template-btn" onclick="loadTemplate('publicRead')">Public Read Access</button>
-                        <button class="template-btn" onclick="loadTemplate('privateReadWrite')">Private Read/Write</button>
-                        <button class="template-btn" onclick="loadTemplate('crossAccount')">Cross-Account Access</button>
-                        <button class="template-btn" onclick="loadTemplate('objectLockVersioning')">Object Lock & Versioning</button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="bucketName">S3 Bucket Name *</label>
-                    <input type="text" id="bucketName" placeholder="my-example-bucket" required>
-                    <small>Enter the name of your S3 bucket (3-63 characters, lowercase letters, numbers, dots, and hyphens)</small>
-                    <div id="bucketNameValidation" class="validation-message"></div>
-                </div>
-
-                <div class="form-group">
-                    <label for="policyEffect">Effect *</label>
-                    <select id="policyEffect">
-                        <option value="Allow">Allow</option>
-                        <option value="Deny">Deny</option>
-                    </select>
-                    <small>Allow or Deny the specified actions</small>
-                </div>
-
-                <!-- Principal field hidden - not currently supported by Impossible Cloud -->
-                <div class="form-group" style="display: none;">
-                    <label for="principal">Principal</label>
-                    <input type="text" id="principal" placeholder='* or arn:aws:iam::123456789012:user/username'>
-                    <small>AWS account, IAM user, service principal, or * for public access</small>
-                    <div id="principalValidation" class="validation-message"></div>
-                </div>
-
-                <div class="form-group">
-                    <label>S3 Actions (Impossible Cloud Compatible)</label>
-                    <small style="margin-bottom: 10px; display: block;">Select permissions to grant. Click categories to expand/collapse. All actions are compatible with Impossible Cloud.</small>
-
-                    <div class="actions-container">
-                        <!-- Object Operations -->
-                        <div class="action-category">
-                            <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>📄 Object Operations</h4>
-                                <span class="category-toggle">▼</span>
-                            </div>
-                            <div class="category-content">
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetObject" value="s3:GetObject" class="s3-action">
-                                    <label for="action_s3_GetObject">GetObject (Read)</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutObject" value="s3:PutObject" class="s3-action">
-                                    <label for="action_s3_PutObject">PutObject (Write)</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_DeleteObject" value="s3:DeleteObject" class="s3-action">
-                                    <label for="action_s3_DeleteObject">DeleteObject</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetObjectAttributes" value="s3:GetObjectAttributes" class="s3-action">
-                                    <label for="action_s3_GetObjectAttributes">GetObjectAttributes</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetObjectTagging" value="s3:GetObjectTagging" class="s3-action">
-                                    <label for="action_s3_GetObjectTagging">GetObjectTagging</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutObjectTagging" value="s3:PutObjectTagging" class="s3-action">
-                                    <label for="action_s3_PutObjectTagging">PutObjectTagging</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_DeleteObjectTagging" value="s3:DeleteObjectTagging" class="s3-action">
-                                    <label for="action_s3_DeleteObjectTagging">DeleteObjectTagging</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bucket Operations -->
-                        <div class="action-category collapsed">
-                            <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>🗂️ Bucket Operations</h4>
-                                <span class="category-toggle">▼</span>
-                            </div>
-                            <div class="category-content">
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_ListBucket" value="s3:ListBucket" class="s3-action">
-                                    <label for="action_s3_ListBucket">ListBucket</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_ListBucketVersions" value="s3:ListBucketVersions" class="s3-action">
-                                    <label for="action_s3_ListBucketVersions">ListBucketVersions</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_ListBucketMultipartUploads" value="s3:ListBucketMultipartUploads" class="s3-action">
-                                    <label for="action_s3_ListBucketMultipartUploads">ListBucketMultipartUploads</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetBucketLocation" value="s3:GetBucketLocation" class="s3-action">
-                                    <label for="action_s3_GetBucketLocation">GetBucketLocation</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetBucketVersioning" value="s3:GetBucketVersioning" class="s3-action">
-                                    <label for="action_s3_GetBucketVersioning">GetBucketVersioning</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutBucketVersioning" value="s3:PutBucketVersioning" class="s3-action">
-                                    <label for="action_s3_PutBucketVersioning">PutBucketVersioning</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bucket Policy & CORS -->
-                        <div class="action-category collapsed">
-                            <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>🔐 Bucket Policy & CORS</h4>
-                                <span class="category-toggle">▼</span>
-                            </div>
-                            <div class="category-content">
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetBucketPolicy" value="s3:GetBucketPolicy" class="s3-action">
-                                    <label for="action_s3_GetBucketPolicy">GetBucketPolicy</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutBucketPolicy" value="s3:PutBucketPolicy" class="s3-action">
-                                    <label for="action_s3_PutBucketPolicy">PutBucketPolicy</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_DeleteBucketPolicy" value="s3:DeleteBucketPolicy" class="s3-action">
-                                    <label for="action_s3_DeleteBucketPolicy">DeleteBucketPolicy</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetBucketCORS" value="s3:GetBucketCORS" class="s3-action">
-                                    <label for="action_s3_GetBucketCORS">GetBucketCORS</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutBucketCORS" value="s3:PutBucketCORS" class="s3-action">
-                                    <label for="action_s3_PutBucketCORS">PutBucketCORS</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_DeleteBucketCORS" value="s3:DeleteBucketCORS" class="s3-action">
-                                    <label for="action_s3_DeleteBucketCORS">DeleteBucketCORS</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Versioning -->
-                        <div class="action-category collapsed">
-                            <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>🔄 Object Versioning</h4>
-                                <span class="category-toggle">▼</span>
-                            </div>
-                            <div class="category-content">
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetObjectVersion" value="s3:GetObjectVersion" class="s3-action">
-                                    <label for="action_s3_GetObjectVersion">GetObjectVersion</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_DeleteObjectVersion" value="s3:DeleteObjectVersion" class="s3-action">
-                                    <label for="action_s3_DeleteObjectVersion">DeleteObjectVersion</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetObjectVersionAttributes" value="s3:GetObjectVersionAttributes" class="s3-action">
-                                    <label for="action_s3_GetObjectVersionAttributes">GetObjectVersionAttributes</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetObjectVersionTagging" value="s3:GetObjectVersionTagging" class="s3-action">
-                                    <label for="action_s3_GetObjectVersionTagging">GetObjectVersionTagging</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutObjectVersionTagging" value="s3:PutObjectVersionTagging" class="s3-action">
-                                    <label for="action_s3_PutObjectVersionTagging">PutObjectVersionTagging</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_DeleteObjectVersionTagging" value="s3:DeleteObjectVersionTagging" class="s3-action">
-                                    <label for="action_s3_DeleteObjectVersionTagging">DeleteObjectVersionTagging</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Multipart Upload -->
-                        <div class="action-category collapsed">
-                            <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>📤 Multipart Upload</h4>
-                                <span class="category-toggle">▼</span>
-                            </div>
-                            <div class="category-content">
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_AbortMultipartUpload" value="s3:AbortMultipartUpload" class="s3-action">
-                                    <label for="action_s3_AbortMultipartUpload">AbortMultipartUpload</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_ListMultipartUploadParts" value="s3:ListMultipartUploadParts" class="s3-action">
-                                    <label for="action_s3_ListMultipartUploadParts">ListMultipartUploadParts</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bucket Tagging -->
-                        <div class="action-category collapsed">
-                            <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>🏷️ Bucket Tagging</h4>
-                                <span class="category-toggle">▼</span>
-                            </div>
-                            <div class="category-content">
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetBucketTagging" value="s3:GetBucketTagging" class="s3-action">
-                                    <label for="action_s3_GetBucketTagging">GetBucketTagging</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutBucketTagging" value="s3:PutBucketTagging" class="s3-action">
-                                    <label for="action_s3_PutBucketTagging">PutBucketTagging</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_DeleteBucketTagging" value="s3:DeleteBucketTagging" class="s3-action">
-                                    <label for="action_s3_DeleteBucketTagging">DeleteBucketTagging</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Object Lock (Immutable Storage) -->
-                        <div class="action-category collapsed">
-                            <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>🔒 Object Lock & Compliance</h4>
-                                <span class="category-toggle">▼</span>
-                            </div>
-                            <div class="category-content">
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_GetObjectLockConfiguration" value="s3:GetObjectLockConfiguration" class="s3-action">
-                                    <label for="action_s3_GetObjectLockConfiguration">GetObjectLockConfiguration</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_PutObjectLockConfiguration" value="s3:PutObjectLockConfiguration" class="s3-action">
-                                    <label for="action_s3_PutObjectLockConfiguration">PutObjectLockConfiguration</label>
-                                </div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_BypassGovernanceRetention" value="s3:BypassGovernanceRetention" class="s3-action">
-                                    <label for="action_s3_BypassGovernanceRetention">BypassGovernanceRetention</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Advanced -->
-                        <div class="action-category collapsed">
-                            <div class="category-header" onclick="toggleCategory(this)">
-                                <h4>🚀 Advanced</h4>
-                                <span class="category-toggle">▼</span>
-                            </div>
-                            <div class="category-content">
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="action_s3_All" value="s3:*" class="s3-action">
-                                    <label for="action_s3_All"><strong>s3:* (All S3 Actions)</strong></label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="customActions">Additional Actions (Optional)</label>
-                    <textarea id="customActions" placeholder="s3:GetBucketLocation&#10;s3:PutObjectAcl"></textarea>
-                    <small>One action per line</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="resourcePath">Resource Path</label>
-                    <input type="text" id="resourcePath" placeholder="* or folder/* or specific-file.txt">
-                    <small>Specify path within bucket (use * for all objects)</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="condition">Condition (Optional - JSON)</label>
-                    <textarea id="condition" placeholder='{"StringLike": {"s3:prefix": ["documents/*"]}}'></textarea>
-                    <small>Advanced: Add IAM policy conditions in JSON format</small>
-                </div>
-
-                <button class="generate-btn" onclick="generatePolicy()">🚀 Generate Policy</button>
-            </div>
-
-            <div class="preview-section">
-                <h2>Generated Policy</h2>
-                <div class="policy-output" id="policyOutput" contenteditable="true" spellcheck="false">{
-  "Version": "2012-10-17",
-  "Statement": []
-}
-
-Click "Generate Policy" to create your bucket policy...</div>
-                <div class="editable-hint">💡 Tip: You can click and edit the policy directly above</div>
-                <div class="action-buttons">
-                    <button class="action-btn copy-btn" onclick="copyPolicy()">📋 Copy to Clipboard</button>
-                    <button class="action-btn download-btn" onclick="downloadPolicy()">💾 Download JSON</button>
-                    <button class="action-btn clear-btn" onclick="clearForm()">🗑️ Clear Form</button>
-                    <button class="action-btn validate-btn" onclick="validatePolicy()">✓ Validate JSON</button>
-                </div>
-            </div>
+        <div class="preview-section">
+          <h2>Generated Policy</h2>
+          <div class="policy-output" id="policyOutput" contenteditable="true" spellcheck="false">
+            { "Version": "2012-10-17", "Statement": [] } Click "Generate Policy" to create your
+            bucket policy...
+          </div>
+          <div class="editable-hint">💡 Tip: You can click and edit the policy directly above</div>
+          <div class="action-buttons">
+            <button class="action-btn copy-btn" onclick="copyPolicy()">📋 Copy to Clipboard</button>
+            <button class="action-btn download-btn" onclick="downloadPolicy()">
+              💾 Download JSON
+            </button>
+            <button class="action-btn clear-btn" onclick="clearForm()">🗑️ Clear Form</button>
+            <button class="action-btn validate-btn" onclick="validatePolicy()">
+              ✓ Validate JSON
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <div class="notification" id="notification"></div>
 
     <script src="policy-generator.js"></script>
-</body>
+  </body>
 </html>
