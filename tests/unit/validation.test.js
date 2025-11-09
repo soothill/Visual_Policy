@@ -115,7 +115,9 @@ describe('Bucket Name Validation', () => {
     test('should reject bucket name formatted as IP address', () => {
       const result = validateBucketName('192.168.1.1');
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Bucket name cannot be formatted as an IP address (e.g., 192.168.1.1)');
+      expect(result.errors).toContain(
+        'Bucket name cannot be formatted as an IP address (e.g., 192.168.1.1)'
+      );
     });
 
     test('should reject bucket name starting with xn--', () => {
@@ -228,7 +230,9 @@ describe('Principal ARN Validation', () => {
     test('should reject IAM ARN with invalid resource format', () => {
       const result = validatePrincipalARN('arn:aws:iam::123456789012:alice');
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('IAM resource must be "root" or include type/name (e.g., user/username)');
+      expect(result.errors).toContain(
+        'IAM resource must be "root" or include type/name (e.g., user/username)'
+      );
     });
 
     test('should reject invalid partition', () => {
@@ -254,19 +258,25 @@ describe('Principal ARN Validation', () => {
     test('should reject Impossible Cloud ARN with non-IAM service', () => {
       const result = validatePrincipalARN('arn:ipcld:s3::MyCanonicalID:bucket/mybucket');
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Impossible Cloud ARNs currently only support IAM service (arn:ipcld:iam::...)');
+      expect(result.errors).toContain(
+        'Impossible Cloud ARNs currently only support IAM service (arn:ipcld:iam::...)'
+      );
     });
 
     test('should reject Impossible Cloud ARN without canonical ID', () => {
       const result = validatePrincipalARN('arn:ipcld:iam:::user/alice');
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Impossible Cloud ARN requires a canonical ID (arn:ipcld:iam::YourCanonicalID:...)');
+      expect(result.errors).toContain(
+        'Impossible Cloud ARN requires a canonical ID (arn:ipcld:iam::YourCanonicalID:...)'
+      );
     });
 
     test('should reject Impossible Cloud ARN without resource', () => {
       const result = validatePrincipalARN('arn:ipcld:iam::MyCanonicalID:');
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Impossible Cloud ARN requires a resource (e.g., user/username, policy/policyname)');
+      expect(result.errors).toContain(
+        'Impossible Cloud ARN requires a resource (e.g., user/username, policy/policyname)'
+      );
     });
   });
 

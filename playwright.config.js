@@ -19,9 +19,9 @@ export default defineConfig({
         '--disable-accelerated-2d-canvas',
         '--no-first-run',
         '--no-zygote',
-        '--disable-gpu'
-      ]
-    }
+        '--disable-gpu',
+      ],
+    },
   },
 
   projects: [
@@ -37,23 +37,25 @@ export default defineConfig({
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--disable-gpu'
-          ]
-        }
+            '--disable-gpu',
+          ],
+        },
       },
     },
 
     // Only run Firefox and WebKit locally, not in CI
-    ...(process.env.CI ? [] : [
-      {
-        name: 'firefox',
-        use: { ...devices['Desktop Firefox'] },
-      },
-      {
-        name: 'webkit',
-        use: { ...devices['Desktop Safari'] },
-      },
-    ]),
+    ...(process.env.CI
+      ? []
+      : [
+          {
+            name: 'firefox',
+            use: { ...devices['Desktop Firefox'] },
+          },
+          {
+            name: 'webkit',
+            use: { ...devices['Desktop Safari'] },
+          },
+        ]),
   ],
 
   webServer: {
